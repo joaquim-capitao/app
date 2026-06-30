@@ -1,0 +1,6 @@
+{
+  "name": "Notícias Personalizadas AI",
+  "description": "Pesquise as principais notícias do dia e agrupe-as por temas personalizados com base nas suas preferências, utilizando inteligência artificial.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
