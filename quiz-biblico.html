@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="pt-PT">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Desafio Bíblico - 50 Acertos Seguidos</title>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --text-color: #f8fafc;
+            --text-muted: #94a3b8;
+            --primary: #6366f1;
+            --primary-hover: #4f46e5;
+            --success: #10b981;
+            --danger: #ef4444;
+            --border: #334155;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: sans-serif; }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            width: 100%;
+            max-width: 600px;
+            background-color: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 30px;
+            text-align: center;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+        }
+
+        .subtitle { font-size: 14px; color: var(--text-muted); margin-bottom: 25px; }
+        
+        .progress-text { display: flex; justify-content: space-between; font-size: 14px; margin-bottom: 8px; }
+        
+        .progress-bar { width: 100%; height: 12px; background-color: var(--border); border-radius: 6px; overflow: hidden; }
+        
+        .progress-fill { height: 100%; width: 0%; background: linear-gradient(90deg, var(--primary), var(--success)); transition: width 0.3s; }
+
+        .question { font-size: 18px; font-weight: bold; margin: 25px 0; line-height: 1.5; min-height: 54px; }
+
+        .options-list { display: flex; flex-direction: column; gap: 12px; }
+
+        .option-btn {
+            background: transparent; color: var(--text-color); border: 2px solid var(--border);
+            padding: 15px; border-radius: 10px; cursor: pointer; font-size: 16px; text-align: left; transition: all 0.2s;
+        }
+
+        .option-btn:hover:not(:disabled) { border-color: var(--primary); background: rgba(99, 102, 241, 0.05); }
+
+        .option-btn.correct { background-color: rgba(16, 185, 129, 0.15) !important; border-color: var(--success) !important; color: #34d399; }
+        
+        .option-btn.wrong { background-color: rgba(239, 68, 68, 0.15) !important; border-color: var(--danger) !important; color: #f87171; }
+
+        .screen { display: none; }
+        .screen.active { display: block; }
+
+        .btn-action {
+            background: var(--primary); color: white; border: none; padding: 14px 28px;
+            border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer; margin-top: 25px;
+        }
+        .btn-action:hover { background: var(--primary-hover); }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- ECRÃ DO JOGO -->
+        <div id="game-screen" class="screen active">
+            <h1>Desafio Bíblico das 50 Perguntas</h1>
+            <p class="subtitle">Errou uma pergunta? Volta ao início!</p>
+            
+            <div class="progress-text">
+                <span id="streak-label">Sequência Atual: 0</span>
+                <span>Objetivo: 50</span>
+            </div>
+            <div class="progress-bar"><div id="progress-fill" class="progress-fill"></div></div>
+
+            <div class="question" id="question-text">A carregar...</div>
+            <div class="options-list">
+                <button class="option-btn" onclick="checkAnswer(0)"></button>
+                <button class="option-btn" onclick="checkAnswer(1)"></button>
+                <button class="option-btn" onclick="checkAnswer(2)"></button>
+            </div>
+        </div>
+
+        <!-- ECRÃ DE FIM DE JOGO (GAME OVER) -->
+        <div id="gameover-screen" class="screen">
+            <h1 style="color: var(--danger)">💀 Fim de Jogo!</h1>
+            <p id="gameover-msg" style="margin-top: 15px; font-size: 18px;"></p>
+            <button class="btn-action" onclick="restartGame()">Tentar Novamente</button>
+        </div>
+
+        <!-- ECRÃ DE VITÓRIA -->
+        <div id="victory-screen" class="screen">
+            <h1 style="color: var(--success)">👑 Excelente Progresso!</h1>
+            <p style="margin-top: 15px;">Muitos parabéns! Conseguiu alcançar os 50 acertos bíblicos seguidos!</p>
+            <button class="btn-action" onclick="restartGame()">Jogar Novamente</button>
+        </div>
+    </div>
+
+    <script>
+        const poolDePerguntas = [
+            // --- PERGUNTAS BÍBLICAS (Versão PT-PT e terminologia jw.org) ---
+            { q: 'Quem é o Autor Supremo da Bíblia?', o: ['Jeová', 'Moisés', 'Paulo'], c: 0 },
+            { q: 'Qual foi o primeiro homem criado por Deus?', o: ['Noé', 'Adão', 'Abraão'], c: 1 },
+            { q: 'Quem construiu a arca para sobreviver ao Dilúvio?', o: ['Moisés', 'Ló', 'Noé'], c: 2 },
+            { q: 'Quantos livros compõem a Bíblia completa?', o: ['66', '73', '50'], c: 0 },
+            { q: 'Qual é o nome do primeiro livro da Bíblia?', o: ['Êxodo', 'Salmos', 'Gênesis'], c: 2 },
+            { q: 'Onde é que Jesus nasceu?', o: ['Jerusalém', 'Belém', 'Nazaré'], c: 1 },
+            { q: 'Quem libertou os israelitas do Egito?', o: ['Josué', 'Moisés', 'David'], c: 1 },
+            { q: 'Qual era a profissão de Jesus na Terra?', o: ['Pescador', 'Carpinteiro', 'Agricultor'], c: 1 },
+            { q: 'Quem foi o homem mais forte da Bíblia?', o: ['Sansão', 'Golias', 'Gideão'], c: 0 },
+            { q: 'Quem derrotou o gigante Golias?', o: ['Saul', 'Salomão', 'David'], c: 2 },
+            { q: 'Qual dos apóstolos negou Jesus três vezes?', o: ['João', 'Pedro', 'Judas'], c: 1 },
+            { q: 'Quem foi lançado na cova dos leões?', o: ['Daniel', 'Elias', 'Jeremias'], c: 0 },
+            { q: 'Quantas pragas enviou Deus ao Egito?', o: ['7', '10', '12'], c: 1 },
+            { q: 'Qual é o nome da esposa de Abraão?', o: ['Rebeca', 'Raquel', 'Sara'], c: 2 },
+            { q: 'Quem recebeu os Dez Mandamentos no Monte Sinai?', o: ['Arão', 'Moisés', 'Samuel'], c: 1 },
+            { q: 'Qual é o nome do mar que se abriu para o povo passar?', o: ['Mar Morto', 'Mar da Galileia', 'Mar Vermelho'], c: 2 },
+            { q: 'Quem foi vendido como escravo pelos próprios irmãos?', o: ['Benjamim', 'José', 'Isaque'], c: 1 },
+            { q: 'Qual é o livro mais longo da Bíblia?', o: ['Isaías', 'Gênesis', 'Salmos'], c: 2 },
+            { q: 'Quem foi o sucessor de Moisés?', o: ['Calebe', 'Josué', 'Gideão'], c: 1 },
+            { q: 'Quantos apóstolos escolheu Jesus originalmente?', o: ['10', '12', '70'], c: 1 },
+            { q: 'Quem escreveu a maioria dos Salmos?', o: ['David', 'Asafe', 'Salomão'], c: 0 },
+            { q: 'Qual foi o animal que falou com Balaão?', o: ['Serpente', 'Cordeiro', 'Jumenta'], c: 2 },
+            { q: 'Quem foi a rainha que salvou os judeus da destruição?', o: ['Ester', 'Rute', 'Jezabel'], c: 0 },
+            { q: 'Em que cidade os muros caíram após o povo marchar?', o: ['Nínive', 'Jericó', 'Babilônia'], c: 1 },
+            { q: 'Quem era o pai de Salomão?', o: ['Saul', 'Natã', 'David'], c: 2 },
+            { q: 'Quantas pessoas foram salvas na Arca de Noé?', o: ['8', '12', '4'], c: 0 },
+            { q: 'Quem foi o precursor de Jesus, batizando-o no Jordão?', o: ['João Batista', 'Tiago', 'André'], c: 0 },
+            { q: 'Qual apóstolo era médico?', o: ['Mateus', 'Lucas', 'Marcos'], c: 1 },
+            { q: 'Quem teve a visão do Apocalipse na ilha de Patmos?', o: ['Paulo', 'Pedro', 'João'], c: 2 },
+            { q: 'Qual era o nome de Paulo antes de se converter?', o: ['Saulo', 'Silas', 'Estêvão'], c: 0 },
+            { q: 'Quem foi o primeiro rei de Israel?', o: ['David', 'Saul', 'Salomão'], c: 1 },
+            { q: 'Quem era o gigante filisteu que David enfrentou?', o: ['Enac', 'Golias', 'Og'], c: 1 },
+            { q: 'Qual é o nome da sogra de Rute?', o: ['Orpa', 'Noemi', 'Lia'], c: 1 },
+            { q: 'Quem foi levado por um redemoinho aos céus?', o: ['Elias', 'Eliseu', 'Enoque'], c: 0 },
+            { q: 'Quem era o filho mais novo de Jacó?', o: ['José', 'Benjamim', 'Rúben'], c: 1 },
+            { q: 'O que é que Deus usou para criar a primeira mulher?', o: ['Pó da terra', 'Água', 'Uma costela'], c: 2 },
+            { q: 'Quem traiu Jesus com um beijo?', o: ['Judas Iscariotes', 'Tomé', 'Filipe'], c: 0 },
+            { q: 'Qual é o livro mais curto da Bíblia?', o: ['Obadias', '3 João', 'Judas'], c: 1 },
+            { q: 'Quem foi o homem mais sábio da Terra?', o: ['Daniel', 'Salomão', 'Ezequiel'], c: 1 },
+            { q: 'Qual é o nome do jardim onde viviam Adão e Eva?', o: ['Éden', 'Getsémani', 'Canaã'], c: 0 },
+            { q: 'Quem interpretou os sonhos do Faraó?', o: ['Moisés', 'José', 'Daniel'], c: 1 },
+            { q: 'Quanto tempo durou a chuva do Dilúvio?', o: ['7 dias', '40 dias', '1 ano'], c: 1 },
+            { q: 'Qual é o nome do primeiro livro do Novo Testamento?', o: ['Atos', 'Romanos', 'Mateus'], c: 2 },
+            { q: 'Quem escreveu o livro de Atos?', o: ['Paulo', 'Lucas', 'Pedro'], c: 1 },
+            { q: 'Quem era o instrutor espiritual de Timóteo?', o: ['Pedro', 'Barnabé', 'Paulo'], c: 2 },
+            { q: 'Qual é o nome do monte onde Moisés faleceu?', o: ['Nebo', 'Sinai', 'Ararate'], c: 0 },
+            { q: 'Quem foi a esposa de Isaque?', o: ['Raquel', 'Rebeca', 'Lia'], c: 1 },
+            { q: 'Quem era o profeta que fugiu de Deus para Társis?', o: ['Jonas', 'Miqueias', 'Amós'], c: 0 },
+            { q: 'Quantas tribos tinha o povo de Israel?', o: ['10', '12', '7'], c: 1 },
+            { q: 'Quem foi o primeiro mártir cristão registado?', o: ['Tiago', 'Estêvão', 'Filipe'], c: 1 },
+            { q: 'Qual é o significado do nome Jesus?', o: ['Jeová é salvação', 'Deus Connosco', 'O Ungido'], c: 0 },
+            { q: 'Quem era o imperador romano aquando do nascimento de Jesus?', o: ['Nero', 'Augusto', 'Tibério'], c: 1 },
+
+            // --- PERGUNTAS ESPECÍFICAS (Ensino JW) ---
+            { q: 'O que significa o nome de Deus, Jeová?', o: ['O Altíssimo', 'Ele faz com que venha a ser', 'Aquele que perdoa'], c: 1 },
+            { q: 'O que é o Reino de Deus?', o: ['Um sentimento no coração', 'Um governo real no céu', 'A igreja na Terra'], c: 1 },
+            { q: 'Em que ano o Reino de Deus foi estabelecido no céu?', o: ['1914', 'No Pentecostes', 'No ano 33 d.C.'], c: 0 },
+            { q: 'Qual é o tema principal da Bíblia?', o: ['A história de Israel', 'A salvação humana', 'A santificação do nome de Deus e o Seu Reino'], c: 2 },
+            { q: 'Quem é o Rei do Reino de Deus?', o: ['David', 'O Arcanjo Miguel', 'Jesus Cristo'], c: 2 },
+            { q: 'Quantas pessoas governarão com Jesus no céu?', o: ['Uma grande multidão', '144 000', 'Todos os homens bons'], c: 1 },
+            { q: 'O que acontece a uma pessoa quando morre?', o: ['Vai para o céu ou para o inferno', 'Fica consciente no além', 'Fica inconsciente, não sabe de nada'], c: 2 },
+            { q: 'Onde é que viverá a maioria das pessoas obedientes no futuro?', o: ['No céu', 'Noutro planeta', 'Na Terra transformada em paraíso'], c: 2 },
+            { q: 'O que representa o "Escravo Fiel e Prudente" de Mateus 24:45?', o: ['Qualquer cristão', 'O Corpo Governante', 'Os apóstolos'], c: 1 },
+            { q: 'Segundo a Bíblia, quem é o "governante deste mundo"?', o: ['Jeová Deus', 'Satanás, o Diabo', 'Os líderes políticos'], c: 1 },
+            { q: 'O que representam o pão e o vinho no Memorial?', o: ['Símbolos do corpo e do sangue', 'O próprio corpo de Jesus', 'Uma refeição comum'], c: 0 },
+            { q: 'Com que frequência as Testemunhas de Jeová celebram o Memorial?', o: ['Todas as semanas', 'Uma vez por mês', 'Anualmente (uma vez por ano)'], c: 2 },
+            { q: 'Qual é o site oficial das Testemunhas de Jeová?', o: ['biblia.com', 'jw.org', 'watchtower.org'], c: 1 },
+            { q: 'Jesus é igual a Deus, o Pai?', o: ['Sim, são a mesma pessoa', 'Não, ele é o Filho e foi criado por Deus', 'Sim, fazem parte da Trindade'], c: 1 },
+            { q: 'Em que tipo de instrumento foi Jesus executado?', o: ['Numa Cruz', 'Numa árvore viva', 'Numa estaca de tortura'], c: 2 },
+            { q: 'O que diz a Bíblia sobre o uso do sangue?', o: ['Pode ser usado livremente', 'Devemos abster-nos de sangue', 'Apenas sangue animal é proibido'], c: 1 },
+            { q: 'Como devem os cristãos agir em relação à política?', o: ['Votar em bons líderes', 'Manter total neutralidade cristã', 'Participar ativamente nos governos'], c: 1 },
+            { q: 'Qual é a principal qualidade de Jeová?', o: ['Justiça', 'Poder', 'Amor'], c: 2 },
+            { q: 'O que é o Armagedon?', o: ['A destruição total do planeta Terra', 'Uma guerra militar entre nações', 'A guerra de Deus contra a maldade'], c: 2 },
+            { q: 'Qual será o futuro da Terra segundo o Salmo 37:29?', o: ['Será queimada', 'Os justos possuirão a Terra e viverão nela para sempre', 'Ficará vazia e escura'], c: 1 },
+            { q: 'Quem é o Arcanjo Miguel, segundo a Bíblia?', o: ['Um anjo comum', 'Jesus Cristo na sua posição celestial', 'Um profeta ressuscitado'], c: 1 },
+            { q: 'O que significa a palavra "Ámen"?', o: ['Certamente / Assim seja', 'Obrigado', 'Por favor'], c: 0 },
+            { q: 'Com que frequência devemos orar a Jeová?', o: ['Três vezes ao dia', 'Incessantemente (com regularidade)', 'Apenas aos domingos'], c: 1 },
+            { q: 'Existe um inferno de fogo como lugar de tormento eterno na Bíblia?', o: ['Sim, para castigar os maus', 'Não, representa apenas a sepultura comum', 'É um estado psicológico'], c: 1 },
+            { q: 'O que é que a palavra "Geena" simboliza?', o: ['Tormento eterno', 'Destruição eterna (morte sem esperança de ressurreição)', 'O Purgatório'], c: 1 },
+            { q: 'Qual é o nome do local onde as Testemunhas de Jeová se reúnem?', o: ['Igreja', 'Templo', 'Salão do Reino'], c: 2 },
+            { q: 'Como é que as Testemunhas de Jeová se tratam mutuamente?', o: ['Irmãos e Irmãs', 'Fiéis', 'Santos'], c: 0 },
+            { q: 'O que é a "Grande Tribulação"?', o: ['Um período de crise económica', 'Um tempo de angústia sem precedentes', 'A destruição antiga de Jerusalém'], c: 1 },
+            { q: 'Segundo Gálatas 5:22, 23, o que compõe o "fruto do espírito"?', o: ['Dons de milagres e línguas', 'Qualidades como amor, alegria e paz', 'Bênçãos financeiras'], c: 1 },
+            { q: 'Quem são as "outras ovelhas" mencionadas por Jesus em João 10:16?', o: ['Membros de outras religiões', 'Os que têm a esperança de viver para sempre na Terra', 'Os gentios do passado'], c: 1 },
+            { q: 'O que é o espírito santo?', o: ['Uma pessoa divina da Trindade', 'A força ativa de Deus', 'Um anjo especial'], c: 1 },
+            { q: 'Por que razão permite Deus o sofrimento humano?', o: ['Porque Ele não se importa com a humanidade', 'Para resolver a questão da soberania universal levantada no Éden', 'Como forma de castigo pelos pecados'], c: 1 },
+            { q: 'O que é o pecado, segundo o ponto de vista bíblico?', o: ['Uma mera falha cultural', 'Errar o alvo da perfeição divina', 'Apenas crimes e atos cruéis'], c: 1 },
+            { q: 'De quem foi o sacrifício de resgate para libertar a humanidade?', o: ['De Moisés', 'De Jesus Cristo', 'Dos profetas antigos'], c: 1 },
+            { q: 'Qual é a principal atividade das Testemunhas de Jeová?', o: ['Realizar obras sociais e caridade', 'Pregar as boas novas do Reino', 'Construir hospitais e escolas'], c: 1 },
+            { q: 'A alma humana é imortal segundo as Escrituras?', o: ['Sim, sobrevive após a morte', 'Não, a alma é a própria pessoa e morre', 'Depende de cada indivíduo'], c: 1 },
+            { q: 'O que é o Paraíso de que a Bíblia fala?', o: ['Um lugar espiritual no céu', 'A Terra restaurada em condições perfeitas', 'Uma mera metáfora de paz interna'], c: 1 },
+            { q: 'Quem é que será ressuscitado no futuro?', o: ['Apenas as pessoas que foram muito boas', 'Tanto justos como injustos', 'Ninguém, a ressurreição já passou'], c: 1 },
+            { q: 'Qual é o maior mandamento de todos?', o: ['Não matar', 'Amar a Jeová de todo o coração', 'Dar contribuições financeiras'], c: 1 },
+            { q: 'Quem inspirou os escritores da Bíblia?', o: ['Eles próprios com a sua cultura', 'Jeová Deus, por meio do espírito santo', 'Os reis daquela época'], c: 1 },
+            { q: 'Qual o livro bíblico que descreve a criação do Universo?', o: ['Êxodo', 'Gênesis', 'Levítico'], c: 1 },
+            { q: 'O que significa orar em nome de Jesus?', o: ['Repetir o nome dele no fim de forma mecânica', 'Reconhecer o papel dele no propósito de Deus', 'Usar a expressão como um amuleto'], c: 1 },
+            { q: 'No Novo Mundo prometido, haverá doenças?', o: ['Sim, mas haverá melhores tratamentos', 'Não, a dor e a morte deixarão de existir', 'Apenas as pessoas idosas adoecerão'], c: 1 },
+            { q: 'Quem é que criou os anjos?', o: ['Jesus', 'Jeová Deus', 'Eles surgiram sozinhos'], c: 1 },
+            { q: 'Devem os cristãos adorar ou venerar imagens?', o: ['Sim, pois ajuda a focar na oração', 'Não, Deus condena qualquer forma de idolatria', 'Apenas imagens de santos específicos'], c: 1 },
+            { q: 'Qual é o nome do pai adotivo de Jesus na Terra?', o: ['José', 'Joaquim', 'Zacarias'], c: 0 },
+            { q: 'Quem era a mãe biológica de Jesus?', o: ['Maria Madalena', 'Maria', 'Isabel'], c: 1 },
+            { q: 'O que é que o arco-íris representa na Bíblia?', o: ['Um sinal de boa sorte', 'A promessa de Deus de nunca mais destruir a Terra por meio de um dilúvio', 'Um caminho para os céus'], c: 1 },
+            { q: 'Como é que Deus comunica com os humanos hoje em dia?', o: ['Através de sonhos e pressentimentos', 'Por meio da Sua Palavra escrita, a Bíblia', 'Por meio de visões diretas'], c: 1 },
+            { q: 'Qual é a verdadeira esperança para os nossos entes queridos que faleceram?', o: ['Que se transformaram em anjos protetores', 'A promessa da ressurreição', 'A reencarnação noutras vidas'], c: 1 }
+        ];
+
+        let perguntasDoJogo = [];
+        let indiceAtual = 0;
+        let aceitandoRespostas = true;
+
+        const gameScreen = document.getElementById('game-screen');
+        const gameoverScreen = document.getElementById('gameover-screen');
+        const victoryScreen = document.getElementById('victory-screen');
+        const questionText = document.getElementById('question-text');
+        const optionButtons = document.querySelectorAll('.option-btn');
+        const streakLabel = document.getElementById('streak-label');
+        const progressFill = document.getElementById('progress-fill');
+        const gameoverMsg = document.getElementById('gameover-msg');
+
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        function initRound() {
+            if (typeof poolDePerguntas === 'undefined' || poolDePerguntas.length === 0) {
+                questionText.innerText = "Erro ao carregar as perguntas do jogo.";
+                return;
+            }
+            const emba = shuffle([...poolDePerguntas]);
+            perguntasDoJogo = emba.slice(0, 50);
+            indiceAtual = 0;
+            aceitandoRespostas = true;
+            updateUI();
+        }
+
+        function updateUI() {
+            streakLabel.innerText = `Sequência Atual: ${indiceAtual}`;
+            progressFill.style.width = `${(indiceAtual / 50) * 100}%`;
+            optionButtons.forEach(btn => { btn.className = 'option-btn'; btn.disabled = false; });
+
+            const p = perguntasDoJogo[indiceAtual];
+            questionText.innerText = p.q;
+            optionButtons[0].innerText = p.o[0];
+            optionButtons[1].innerText = p.o[1];
+            optionButtons[2].innerText = p.o[2];
+        }
+
+        function checkAnswer(chosenIndex) {
+            if (!aceitandoRespostas) return;
+            aceitandoRespostas = false;
+            const p = perguntasDoJogo[indiceAtual];
+            optionButtons.forEach(btn => btn.disabled = true);
+
+            if (chosenIndex === p.c) {
+                optionButtons[chosenIndex].classList.add('correct');
+                setTimeout(() => {
+                    indiceAtual++;
+                    if (indiceAtual >= 50) { showScreen(victoryScreen); } 
+                    else { aceitandoRespostas = true; updateUI(); }
+                }, 600);
+            } else {
+                optionButtons[chosenIndex].classList.add('wrong');
+                optionButtons[p.c].classList.add('correct');
+                setTimeout(() => {
+                    gameoverMsg.innerHTML = `Errou na pergunta número <strong>${indiceAtual + 1}</strong>!`;
+                    showScreen(gameoverScreen);
+                }, 1000);
+            }
+        }
+
+        function showScreen(screen) {
+            gameScreen.classList.remove('active');
+            gameoverScreen.classList.remove('active');
+            victoryScreen.classList.remove('active');
+            screen.classList.add('active');
+        }
+
+        function restartGame() { showScreen(gameScreen); initRound(); }
+
+        window.onload = initRound;
+    </script>
+</body>
+</html>
