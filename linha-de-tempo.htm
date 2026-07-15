@@ -1,0 +1,396 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Linha do Tempo Bíblica</title>
+    <style>
+        :root {
+            --primary: #8b5a2b;
+            --accent: #d4af37;
+            --bg: #f4f3ef;
+            --text: #333;
+        }
+
+        body { 
+            font-family: system-ui, -apple-system, sans-serif; 
+            background: var(--bg); 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            padding: 15px;
+            margin: 0;
+            color: var(--text);
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 15px;
+        }
+
+        h1 { 
+            color: var(--primary); 
+            font-size: 1.8rem;
+            margin: 0 0 5px 0;
+        }
+
+        p {
+            margin: 0;
+            color: #555;
+            font-size: 0.95rem;
+            max-width: 600px;
+        }
+
+        /* Abas de Nível */
+        .level-selector {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .level-btn {
+            background: #ddd;
+            color: #555;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.2s ease;
+        }
+
+        .level-btn.active {
+            background: var(--primary);
+            color: white;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.15);
+        }
+
+        .level-info {
+            font-weight: bold;
+            color: var(--primary);
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+        }
+        
+        /* Painel onde ficam as cartas para escolher */
+        .cards-container { 
+            display: flex; 
+            gap: 8px; 
+            flex-wrap: wrap; 
+            justify-content: center; 
+            margin-bottom: 25px; 
+            min-height: 80px; 
+            padding: 12px; 
+            border: 2px dashed var(--primary); 
+            border-radius: 10px; 
+            width: 90%; 
+            max-width: 800px; 
+            background: rgba(255, 255, 255, 0.5);
+        }
+        
+        /* Cartão do personagem */
+        .card { 
+            background: white; 
+            border: 2px solid var(--primary); 
+            padding: 8px 12px; 
+            border-radius: 8px; 
+            cursor: pointer; 
+            text-align: center; 
+            transition: all 0.2s ease; 
+            font-weight: bold;
+            font-size: 0.9rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            user-select: none;
+        }
+
+        .card.selected { 
+            border-color: var(--accent); 
+            background-color: #fff8e1; 
+            transform: scale(1.05); 
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15); 
+        }
+        
+        /* Linha do Tempo */
+        .timeline { 
+            display: flex; 
+            gap: 12px; 
+            flex-wrap: wrap; 
+            justify-content: center;
+            width: 100%;
+            max-width: 950px;
+            margin-bottom: 25px;
+            padding: 15px 5px;
+            background: #e9e7e0;
+            border-radius: 12px;
+        }
+
+        /* Contentor do número + espaço da carta */
+        .slot-wrapper {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .slot-number {
+            font-size: 0.8rem;
+            font-weight: bold;
+            color: var(--primary);
+        }
+        
+        /* O quadrado onde a carta encaixa */
+        .slot { 
+            width: 105px; 
+            height: 55px; 
+            border: 2px dashed var(--accent); 
+            border-radius: 8px; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            cursor: pointer; 
+            background: rgba(212, 175, 55, 0.02);
+            transition: background 0.2s;
+        }
+
+        .slot:hover { 
+            background: rgba(212, 175, 55, 0.1); 
+        }
+        
+        /* Botões de Ação */
+        .buttons-area {
+            display: flex;
+            gap: 10px;
+        }
+
+        button.action-btn { 
+            background: var(--primary); 
+            color: white; 
+            border: none; 
+            padding: 10px 20px; 
+            cursor: pointer; 
+            border-radius: 6px; 
+            font-weight: bold;
+            font-size: 0.95rem;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        button.action-btn:hover { 
+            background: #70451f; 
+        }
+
+        #feedback { 
+            font-weight: bold; 
+            margin-top: 15px; 
+            text-align: center;
+            font-size: 1.1rem;
+            min-height: 25px;
+        }
+
+        /* Cores de validação */
+        .correct { 
+            border-color: #2e7d32 !important; 
+            background-color: #e8f5e9 !important; 
+            color: #2e7d32;
+        }
+
+        .incorrect { 
+            border-color: #c62828 !important; 
+            background-color: #ffebee !important; 
+            color: #c62828;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Linha do Tempo</h1>
+        <p>Clique num personagem ou acontecimento e coloque-o na ordem cronológica correta.</p>
+    </header>
+
+    <!-- Seleção de Níveis -->
+    <div class="level-selector">
+        <button class="level-btn active" onclick="changeLevel(1)" id="btn-lvl-1">Nível 1</button>
+        <button class="level-btn" onclick="changeLevel(2)" id="btn-lvl-2">Nível 2</button>
+        <button class="level-btn" onclick="changeLevel(3)" id="btn-lvl-3">Nível 3</button>
+    </div>
+
+    <!-- Título do Nível Atual -->
+    <div class="level-info" id="level-title">Nível 1: Primórdios e Patriarcas</div>
+
+    <!-- Onde ficam as opções para escolher -->
+    <div class="cards-container" id="cards-pool"></div>
+
+    <!-- Linha do Tempo (Slots) -->
+    <div class="timeline" id="timeline"></div>
+
+    <div class="buttons-area">
+        <button class="action-btn" onclick="checkGame()">Verificar Respostas</button>
+        <button class="action-btn" onclick="resetGame()" style="background: #666;">Reiniciar Nível</button>
+    </div>
+
+    <div id="feedback"></div>
+
+    <script>
+        // Base de dados dividida em 3 níveis cronológicos (Total: 20 personagens)
+        const gameData = {
+            1: {
+                title: "Nível 1: Primórdios e Patriarcas",
+                characters: [
+                    { id: "adao", name: "Criação de Adão" },
+                    { id: "noe", name: "Dilúvio" },
+                    { id: "abraao", name: "Abraão" },
+                    { id: "jose", name: "José do Egito" },
+                    { id: "moises", name: "Moisés" }
+                    ]
+            },
+            2: {
+                title: "Nível 2: Líderes, Reis e Profetas",
+                characters: [
+                    { id: "josue", name: "Josué" },
+                    { id: "sansao", name: "Sansão" },
+                    { id: "david", name: "David" },
+                    { id: "salomao", name: "Salomão" },
+                    { id: "elias", name: "Elias" },
+                    { id: "isaias", name: "Isaías" },
+                    { id: "daniel", name: "Daniel" }
+                ]
+            },
+            3: {
+                title: "Nível 3: Escrituras Gregas",
+                characters: [
+                    { id: "joao_baptista", name: "Nascimento de João Baptista" },
+                    { id: "jesus", name: "Nascimento de Jesus" },
+                    { id: "pedro", name: "Escolha dos apóstolos" },
+                    { id: "estevao", name: "Apedrejamento de Estêvão" },
+                    { id: "paulo", name: "Conversão de Paulo" },
+                    { id: "timoteo", name: "Timóteo acompanha Paulo" },
+                    { id: "joao_apostolo", name: "Escrita do Apocalipse" }
+                ]
+            }
+        };
+
+        let currentLevel = 1;
+        let selectedElement = null;
+
+        function loadLevel(levelNum) {
+            currentLevel = levelNum;
+            const level = gameData[currentLevel];
+            
+            // Atualizar classes dos botões de nível
+            document.querySelectorAll('.level-btn').forEach((btn, index) => {
+                btn.classList.toggle('active', index + 1 === levelNum);
+            });
+
+            // Atualizar título
+            document.getElementById('level-title').innerText = level.title;
+
+            const pool = document.getElementById('cards-pool');
+            const timeline = document.getElementById('timeline');
+            pool.innerHTML = ''; 
+            timeline.innerHTML = ''; 
+            document.getElementById('feedback').innerText = '';
+            selectedElement = null;
+
+            // Criar os slots para o nível atual
+            level.characters.forEach((_, i) => {
+                const wrapper = document.createElement('div');
+                wrapper.className = 'slot-wrapper';
+
+                const num = document.createElement('div');
+                num.className = 'slot-number';
+                num.innerText = `${i + 1}º`;
+
+                const slot = document.createElement('div');
+                slot.className = 'slot';
+                slot.onclick = () => placeCard(slot);
+
+                wrapper.appendChild(num);
+                wrapper.appendChild(slot);
+                timeline.appendChild(wrapper);
+            });
+
+            // Criar e embaralhar as cartas deste nível
+            const shuffled = [...level.characters].sort(() => Math.random() - 0.5);
+            shuffled.forEach(char => {
+                const card = document.createElement('div');
+                card.className = 'card';
+                card.innerText = char.name;
+                card.id = char.id;
+                card.onclick = (e) => selectCard(card, e);
+                pool.appendChild(card);
+            });
+        }
+
+        function selectCard(card, e) {
+            e.stopPropagation();
+            if (selectedElement) selectedElement.classList.remove('selected');
+            selectedElement = card;
+            selectedElement.classList.add('selected');
+        }
+
+        function placeCard(slot) {
+            if (!selectedElement) return;
+
+            // Se o slot já estiver ocupado, devolve a antiga para o painel superior
+            if (slot.children.length > 0) {
+                const existingCard = slot.children[0];
+                existingCard.className = 'card';
+                document.getElementById('cards-pool').appendChild(existingCard);
+            }
+
+            slot.appendChild(selectedElement);
+            selectedElement.classList.remove('selected');
+            selectedElement.classList.remove('correct', 'incorrect');
+            selectedElement = null;
+        }
+
+        function changeLevel(levelNum) {
+            if (confirm("Quer mudar de nível? O progresso do nível atual será reiniciado.")) {
+                loadLevel(levelNum);
+            }
+        }
+
+        function checkGame() {
+            const slots = document.querySelectorAll('.slot');
+            const levelChars = gameData[currentLevel].characters;
+            let allFilled = true;
+            let allCorrect = true;
+
+            slots.forEach((slot, i) => {
+                const card = slot.children[0];
+                if (!card) { 
+                    allFilled = false; 
+                    return; 
+                }
+
+                if (card.id === levelChars[i].id) {
+                    card.className = 'card correct';
+                } else {
+                    card.className = 'card incorrect';
+                    allCorrect = false;
+                }
+            });
+
+            const feedback = document.getElementById('feedback');
+            if (!allFilled) {
+                feedback.innerHTML = "<span style='color: #c62828;'>Preencha todas as posições antes de verificar!</span>";
+            } else if (allCorrect) {
+                if (currentLevel < 3) {
+                    feedback.innerHTML = `<span style='color: #2e7d32;'>Excelente! Completou o Nível ${currentLevel} com sucesso! 🎉 <br> <button class="action-btn" onclick="loadLevel(${currentLevel + 1})" style="margin-top:10px; background-color:#2e7d32;">Avançar para o Nível ${currentLevel + 1}</button></span>`;
+                } else {
+                    feedback.innerHTML = "<span style='color: #2e7d32;'>Parabéns! Completou todos os níveis e dominou a Cronologia Bíblica! 🏆👑</span>";
+                }
+            } else {
+                feedback.innerHTML = "<span style='color: #c62828;'>Alguns personagens estão fora de ordem. Tente novamente!</span>";
+            }
+        }
+
+        function resetGame() { 
+            loadLevel(currentLevel); 
+        }
+
+        // Iniciar no Nível 1 automaticamente ao abrir
+        window.onload = () => loadLevel(1);
+    </script>
+</body>
+</html>
