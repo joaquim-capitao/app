@@ -1,0 +1,174 @@
+@import url('https://fonts.googleapis.com/css2?family=Ubuntu:ital,wght@0,500;0,700;1,500;1,700&display=swap');
+/* ==========================================================================
+   VARIÁVEIS GLOBAIS (Tema de Papel Moderno)
+   ========================================================================== */
+
+:root {
+  --bg-main: #d6d0b6;        /* Fundo */
+  --bg-card: #ebe6cc;        /* Fundo ligeiramente mais claro para cartões ou blocos */
+  --text-main: #2c2b33;      /* Texto principal */
+  --text-muted: #4a3923;     /* Subtítulos, metadados e citações */
+  --accent: #24267d;         /* Links e destaques */
+  --accent-hover: #595bd4;   /* Variação mais clara do accent para estados hover */
+  --border-color: #1f3822;   /* Linhas divisórias subtis */
+  
+  /* Tipografia */
+  --font-ubuntu: "Ubuntu", system-ui, -apple-system, sans-serif;
+  
+  /* Espaçamento e Largura */
+  --max-width: 640px;        /* Largura ideal para leitura (entre 60-75 caracteres por linha) */
+}
+
+/* ==========================================================================
+   RESET E CONFIGURAÇÃO BASE
+   ========================================================================== */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 20px;           /* Tamanho de fonte base ligeiramente maior para conforto */
+  line-height: 1.65;         /* Espaçamento entre linhas ideal para textos longos */
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--bg-main);
+  color: var(--text-main);
+  font-family: var(--font-ubuntu);
+  font-weight: 100;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  padding: 1.5rem 1.2rem;    /* Margem confortável para respiração do layout */
+}
+
+/* ==========================================================================
+   ESTRUTURA E LAYOUT
+   ========================================================================== */
+.container {
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 0 0.5rem;
+}
+
+/* Header / Título da Página */
+header {
+  margin-bottom: 3.5rem;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 1.5rem;
+}
+
+/* ==========================================================================
+   TIPOGRAFIA (Estilo Editorial)
+   ========================================================================== */
+h1, h2, h3, h4 {
+  color: #1f3822;            /* Títulos */
+  font-family: var(--font-ubuntu);
+  font-weight: 100;
+  line-height: 1.25;
+  margin-bottom: 1.25rem;
+  margin-top: 1.5rem;
+  letter-spacing: -0.01em;
+}
+
+h1 {
+  font-size: 2.2rem;
+  letter-spacing: -0.02em;
+}
+
+h2 {
+  font-size: 1.6rem;
+  border-left: 3px solid var(--accent);
+  padding-left: 0.75rem;
+}
+
+p {
+  margin-bottom: 1.5rem;
+  /* Justificar em telas grandes, mas manter à esquerda em celulares para evitar buracos no texto */
+  text-align: justify; 
+}
+
+/* Pequeno truque de indentação estilo livro para parágrafos seguidos (opcional) */
+/* p + p { text-indent: 1.5rem; margin-top: -1.5rem; } */
+
+.meta {
+  font-family: var(--font-sans);
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* ==========================================================================
+   ELEMENTOS DE TEXTO E LINKS
+   ========================================================================== */
+a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 3px;
+  transition: color 0.2s ease;
+}
+
+a:hover {
+  color: var(--text-main);
+  text-decoration-thickness: 2px;
+}
+
+/* Citações em Bloco (Blockquotes) */
+blockquote {
+  margin: 2rem 0;
+  padding-left: 1.5rem;
+  border-left: 2px solid var(--text-muted);
+  font-style: italic;
+  color: var(--text-muted);
+}
+
+/* Garante que as imagens nunca ultrapassam a largura do texto e mantêm a proporção */
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 1.5rem auto; /* Cria espaço acima/abaixo e centra a imagem */
+  border-radius: 4px;  /* Opcional: suaviza os cantos da imagem como num livro */
+}
+
+/* Elementos de Destaque */
+strong {
+  color: #000; /* Um pouco mais escuro para destacar no papel */
+  font-weight: 100;
+}
+
+hr {
+  border: 0;
+  border-top: 1px dashed var(--border-color);
+  margin: 3rem 0;
+}
+
+/* ==========================================================================
+   ADAPTAÇÃO ADICIONAL PARA SMARTPHONES (Media Queries)
+   ========================================================================== */
+@media (max-width: 500px) {
+  html {
+    font-size: 18px;         /* Reduz levemente a fonte em telas muito pequenas */
+  }
+  
+  body {
+    padding: 1.5rem 1rem;    /* Otimiza o espaço das margens no celular */
+  }
+
+  h1 {
+    font-size: 1.8rem;       /* Título proporcional à tela do celular */
+  }
+
+  h2 {
+    font-size: 1.4rem;
+  }
+
+  p {
+  text-align: left;        /* O texto fica alinhado à esquerda no telemóvel */
+  line-height: 1.6;
+  }  
+}
