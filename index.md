@@ -4,3 +4,5 @@
 [1. Quiz Bíblico](https://joaquim-capitao.github.io/app/quiz-biblico.html)
 
 [2. Linha do Tempo](https://joaquim-capitao.github.io/app/linha-do-tempo)
+
+[3. Noé no Paraíso (Puzzle)](https://joaquim-capitao.github.io/app/puzzle_001.html)
