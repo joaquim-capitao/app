@@ -11,7 +11,7 @@
 
     body {
       font-family: Arial, sans-serif;
-      background-color: #1e1e28;
+      background-color: #1b1b47;
       color: #cfd3dc;
       display: flex;
       flex-direction: column;
@@ -22,7 +22,7 @@
     }
 
     h1 {
-      color: #f07823;
+      color: #fa700f;
       margin-bottom: 5px;
       font-size: 1.8rem;
     }
@@ -78,10 +78,10 @@
 <body>
 
   <h1>Puzzle: Noé no Paraíso</h1>
-  <p>Clica numa peça e depois noutra até que a imagem esteja montada!</p>
+  <p>Clica numa peça e depois noutra até que a imagem fique montada!</p>
 
   <div id="controls">
-    <button onclick="embaralhar()">Embaralhar Peças</button>
+    <button onclick="embaralhar()">Embaralhar as Peças</button>
   </div>
 
   <div id="canvas-container">
@@ -225,7 +225,7 @@
     function verificarVitoria() {
       const venceu = pieces.every(p => p.origRow === p.currentRow && p.origCol === p.currentCol);
       if (venceu) {
-        setTimeout(() => alert('Parabéns! Completou o quebra-cabeças!'), 100);
+        setTimeout(() => alert('Parabéns! Completaste o puzzle!'), 100);
       }
     }
   </script>
