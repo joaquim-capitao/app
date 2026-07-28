@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Desafio Cronológico da Bíblia</title>
+    <style>
+        :root {
+            --bg-color: #f4f1ea;
+            --card-bg: #ffffff;
+            --primary-color: #5c3d2e;
+            --accent-color: #b85c38;
+            --accent-hover: #9c4b2c;
+            --text-color: #2b2b2b;
+            --success-color: #2e7d32;
+            --error-color: #c62828;
+            --slot-border: #a89f91;
+            --border-radius: 10px;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            margin: 0;
+            padding: 15px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 15px;
+            width: 100%;
+            max-width: 900px;
+        }
+
+        h1 {
+            color: var(--primary-color);
+            margin: 0 0 5px 0;
+            font-size: 1.6rem;
+        }
+
+        .level-info {
+            font-size: 1rem;
+            font-weight: bold;
+            color: var(--accent-color);
+            margin-bottom: 8px;
+        }
+
+        .instructions {
+            font-size: 0.9rem;
+            background-color: #e0d6c8;
+            padding: 10px 14px;
+            border-radius: var(--border-radius);
+            margin-bottom: 15px;
+            line-height: 1.4;
+        }
+
+        /* Layout de 2 colunas para ecrãs maiores */
+        .game-layout {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            width: 100%;
+            max-width: 900px;
+        }
+
+        @media (min-width: 768px) {
+            .game-layout {
+                flex-direction: row;
+                align-items: flex-start;
+            }
+
+            .section-box {
+                flex: 1;
+            }
+        }
+
+        .section-box {
+            background-color: rgba(255, 255, 255, 0.5);
+            border: 2px dashed #c0b4a4;
+            border-radius: var(--border-radius);
+            padding: 12px;
+            min-height: 350px;
+        }
+
+        .section-title {
+            font-size: 1rem;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin-bottom: 12px;
+            text-align: center;
+            border-bottom: 2px solid #d3c4b1;
+            padding-bottom: 6px;
+        }
+
+        /* Cartões de evento */
+        .event-card {
+            background-color: var(--card-bg);
+            border: 2px solid #c0b4a4;
+            padding: 12px 14px;
+            border-radius: 8px;
+            cursor: pointer;
+            user-select: none;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.06);
+            margin-bottom: 10px;
+            transition: transform 0.15s ease, border-color 0.15s, background-color 0.15s, box-shadow 0.15s;
+            font-size: 0.95rem;
+            font-weight: 500;
+        }
+
+        .event-card:hover {
+            border-color: var(--accent-color);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .event-card.selected {
+            border-color: var(--accent-color);
+            background-color: #fcebe6;
+            outline: 2px solid var(--accent-color);
+            transform: scale(1.02);
+        }
+
+        /* Slots de Destino */
+        .slots-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .slot-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .slot-number {
+            font-weight: bold;
+            color: var(--primary-color);
+            width: 28px;
+            text-align: right;
+            font-size: 0.95rem;
+        }
+
+        .slot-target {
+            flex: 1;
+            min-height: 46px;
+            border: 2px dashed var(--slot-border);
+            border-radius: 8px;
+            background-color: rgba(255, 255, 255, 0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 4px;
+            transition: background-color 0.2s, border-color 0.2s;
+            cursor: pointer;
+        }
+
+        .slot-target.empty:hover {
+            background-color: #ede6dc;
+            border-color: var(--accent-color);
+        }
+
+        .slot-target.target-highlight {
+            border-color: var(--accent-color);
+            background-color: #f7e8e1;
+        }
+
+        .slot-target .event-card {
+            width: 100%;
+            margin-bottom: 0;
+        }
+
+        /* Validação / Resultados */
+        .slot-target.correct .event-card {
+            background-color: #e8f5e9;
+            border-color: var(--success-color);
+            color: var(--success-color);
+        }
+
+        .slot-target.incorrect .event-card {
+            background-color: #ffebee;
+            border-color: var(--error-color);
+            color: var(--error-color);
+        }
+
+        /* Controlo e Mensagens */
+        .controls {
+            margin-top: 20px;
+            display: flex;
+            gap: 12px;
+            width: 100%;
+            max-width: 900px;
+        }
+
+        button {
+            flex: 1;
+            padding: 14px;
+            border: none;
+            border-radius: var(--border-radius);
+            background-color: var(--primary-color);
+            color: white;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.2s, transform 0.1s;
+        }
+
+        button:hover {
+            background-color: var(--accent-color);
+        }
+
+        button:active {
+            transform: scale(0.99);
+        }
+
+        #message {
+            margin-top: 15px;
+            font-weight: bold;
+            text-align: center;
+            min-height: 24px;
+            font-size: 1.05rem;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>Linha do Tempo</h1>
+    <div class="level-info" id="level-title">Nível 1 de 10</div>
+    <div class="instructions">
+        👉 <b>Como jogar:</b> Clica (ou toca) num evento da caixa de <b>"Opções Disponíveis"</b> para selecioná-lo e, em seguida, clica num <b>"Espaço em Branco"</b> (1, 2, 3...) para o colocar. Se quiseres mudar, clica no evento colocado para o devolver às opções!
+    </div>
+</header>
+
+<div class="game-layout">
+    <!-- Secção de Opções Disponíveis -->
+    <div class="section-box">
+        <div class="section-title">📦 Opções Disponíveis (Desordenadas)</div>
+        <div id="pool-container"></div>
+    </div>
+
+    <!-- Secção de Espaços em Branco (Linha do Tempo) -->
+    <div class="section-box">
+        <div class="section-title">⏱️ Ordem Cronológica (Do mais antigo para o mais recente)</div>
+        <div id="slots-container" class="slots-container"></div>
+    </div>
+</div>
+
+<div id="message"></div>
+
+<div class="controls">
+    <button id="check-btn" onclick="checkOrder()">Verificar Ordem</button>
+    <button id="next-btn" onclick="nextLevel()" style="display: none;">Próximo Nível ➔</button>
+</div>
+
+<script>
+const allEvents = [
+    // Nível 1: As Origens
+    [
+        "Criação de Adão",
+        "Pacto edénico",
+        "Caim mata abel",
+        "Enoque prega",
+        "Dilúvio",
+        "Construção da Torre de Babel",
+        "Morte de Noé",
+        "Nascimento de Abraão"
+    ],
+    // Nível 2: Os Patriarcas
+    [
+        "Abraão cruza o Eufrates",
+        "Pacto Abraâmico",
+        "Melquisideque visita Abraão",
+        "Julgamento de Sodoma e Gomorra",
+        "Nascimento de Isaque",
+        "Começo da aflição de 400 anos (Atos 7:26)",
+        "Casamento de Isaque e Rebeca",
+        "Morte de Sem"
+    ],
+    // Nível 3: De Jacó ao Egito
+    [
+        "Nascimento de Esaú e Jacó",
+        "Morte de Abraão",
+        "Jacó casa-se com Lia e Raquel",
+        "Nascimento de José",
+        "Jacó luta com um anjo",
+        "José é vendido como escravo",
+        "Morte de Isaque",
+        "José é nomeado primeiro-ministro do Egito"
+    ],
+    // Nível 4: Êxodo e Libertação
+    [
+        "Jacó entra no Egito com a família",
+        "Morte de Jacó",
+        "Morte de José",
+        "Provação de Jó",
+        "Nascimento de Moisés",
+        "Moisés foge do Egito",
+        "Moisés recebe mensagem junto ao espinheiro",
+        "Os israelitas saem do Egito"
+    ],
+    // Nível 5: O Deserto e Canaã
+    [
+        "O Mar Vermelho é aberto",
+        "Fim do período de 400 anos de aflição",
+        "Pacto da Lei",
+        "Moisés compila o livro de Génesis",
+        "É concluída a construção do tabernáculo",
+        "Moisés termina os livros de Êxodo e Levítico",
+        "Moisés termina o livro de Jó",
+        "Moisés termina o livro de Números",
+        "Moisés termina o livro de Deuteronómio",
+        "Moisés morre",
+        "Israel entra em Canaã",
+        "Josué morre"
+    ],
+    // Nível 6: Os Reis
+    [
+        "Saul é ungido como rei",
+        "Nascimento de David",
+        "Samuel termina o livro de Juízes",
+        "David torna-se Rei",
+        "Pacto para um reino com David",
+        "Salomão sucede David",
+        "Salomão começa a construção do Templo",
+        "O reino é dividido",
+        "Sisaque invade Judá e leva tesouros do templo"
+    ],
+    // Nível 7: Profetas e Declínio
+    [
+        "A rainha Atalia usurpa o trono de Judá",
+        "Isaías começa a profetizar",
+        "A Assíria subjuga Israel",
+        "Senaqueribe invade Judá",
+        "Manassés sucede Ezequias como Rei de Judá",
+        "Josias sucede Amom como Rei de Judá",
+        "Jeremias é comissionado como profeta",
+        "Nínive cai diante dos caldeus e dos medos"
+    ],
+    // Nível 8: Cativeiro Babilónico e Retorno
+    [
+        "Nabucodonosor (II) torna-se rei de Babilônia",
+        "Nabucodonosor faz de Jeoiaquim um rei tributário",
+        "Nabucodonosor leva os primeiros cativos judeus",
+        "Zedequias é constituído rei de Judá",
+        "Ezequiel começa a profetizar",
+        "Começa o sítio de Jerusalém pelos babilónios",
+        "Jerusalém é destruída pelos babilónios",
+        "Jeremias escreve Lamentações",
+        "Babilónia cai diante dos medos e dos persas",
+        "Ciro permite que os judeus retornem a Jerusalém",
+        "Zorobabel lança o alicerce do templo",
+        "Neemias reconstroi as muralhas de Jerusalém"
+    ],
+    // Nível 9: Vida e Ministério de Jesus
+    [
+        "Nascimento de João Batista",
+        "Nascimento de Jesus",
+        "Jesus com 12 anos fala com os instrutores no templo",
+        "Jesus é batizado",
+        "Jesus começa a pregar",
+        "Jesus faz o primeiro milagre em Caná",
+        "Jesus expulsa comerciantes do tempo pela primeira vez",
+        "Jesus prega aos samaritanos",
+        "Jesus convoca Simão, André, Tiago e João.",
+        "Jesus escolhe os 12 apóstolos",
+        "Sermão do Monte",
+        "João Batista é decapitado",
+        "Transfiguração de Jesus diante de Pedro, Tiago e João",
+        "Lázaro é ressuscitado em Betânia"
+    ],
+    // Nível 10: Os dias finais de Jesus e a Era Apostólica
+    [
+        "Entrada triunfal de Jesus em Jerusalém",
+        "Jesus prediz os sinais dos últimos dias",
+        "Jesus celebra a última Páscoa.",
+        "Jesus lava os pés dos apóstolos",
+        "Instituída a Refeição Noturna do Senhor",
+        "Jesus ora no jardim Getsémani",
+        "Jesus é traído e preso",
+        "Jesus é torturado e morto",
+        "Jesus é ressuscitado",
+        "Derramamento do espírito em Pentecostes",
+        "Pedro visita Cornélio",
+        "O corpo governante decide sobre circuncisão",
+        "Jerusalém e o templo são destruídos pelos Romanos",
+        "A escrita da Bíblia é terminada",
+        "Morre João, o último dos apóstolos"
+    ]
+];
+
+const levelTitles = [
+    "Nível 1: As Origens",
+    "Nível 2: Os Patriarcas",
+    "Nível 3: De Jacó ao Egito",
+    "Nível 4: Libertação do Egito",
+    "Nível 5: No Deserto e Entrada em Canaã",
+    "Nível 6: Os Reis",
+    "Nível 7: O Declínio",
+    "Nível 8: O Exílio e a Reconstrução",
+    "Nível 9: A Vida e o Ministério de Jesus",
+    "Nível 10: Os Dias Finais de Jesus e a Era Apostólica"
+];
+
+let currentLevel = 0;
+let currentCorrectOrder = [];
+let selectedElement = null;
+
+function shuffle(array) {
+    let currentIndex = array.length, randomIndex;
+    let newArray = [...array];
+    while (currentIndex !== 0) {
+        randomIndex = Math.floor(Math.random() * currentIndex);
+        currentIndex--;
+        [newArray[currentIndex], newArray[randomIndex]] = [newArray[randomIndex], newArray[currentIndex]];
+    }
+    return newArray;
+}
+
+function loadLevel() {
+    const pool = document.getElementById('pool-container');
+    const slots = document.getElementById('slots-container');
+    
+    pool.innerHTML = '';
+    slots.innerHTML = '';
+    document.getElementById('message').innerText = '';
+    document.getElementById('next-btn').style.display = 'none';
+    document.getElementById('check-btn').style.display = 'block';
+    document.getElementById('check-btn').disabled = false;
+    
+    document.getElementById('level-title').innerText = `${levelTitles[currentLevel]} (${currentLevel + 1}/${allEvents.length})`;
+
+    currentCorrectOrder = allEvents[currentLevel];
+    let shuffledEvents = shuffle(currentCorrectOrder);
+
+    // Evita dar o array já ordenado por sorte
+    while(JSON.stringify(shuffledEvents) === JSON.stringify(currentCorrectOrder) && shuffledEvents.length > 1) {
+        shuffledEvents = shuffle(currentCorrectOrder);
+    }
+
+    // Criar os cartões na zona de opções disponíveis
+    shuffledEvents.forEach((text, i) => {
+        const card = createCard(text, 'card-' + i);
+        pool.appendChild(card);
+    });
+
+    // Criar os slots em branco
+    for (let i = 0; i < currentCorrectOrder.length; i++) {
+        const slotRow = document.createElement('div');
+        slotRow.className = 'slot-row';
+
+        const slotNum = document.createElement('div');
+        slotNum.className = 'slot-number';
+        slotNum.innerText = `${i + 1}.`;
+
+        const slotTarget = document.createElement('div');
+        slotTarget.className = 'slot-target empty';
+        slotTarget.dataset.index = i;
+        slotTarget.onclick = () => handleSlotClick(slotTarget);
+
+        slotRow.appendChild(slotNum);
+        slotRow.appendChild(slotTarget);
+        slots.appendChild(slotRow);
+    }
+
+    selectedElement = null;
+}
+
+function createCard(text, id) {
+    const card = document.createElement('div');
+    card.className = 'event-card';
+    card.id = id;
+    card.dataset.text = text;
+    card.innerText = text;
+    card.onclick = (e) => {
+        e.stopPropagation();
+        handleCardClick(card);
+    };
+    return card;
+}
+
+function handleCardClick(card) {
+    // Se o cartão já estiver inserido num slot, ao clicar nele ele regressa ao pool
+    const parentSlot = card.closest('.slot-target');
+    if (parentSlot) {
+        parentSlot.classList.add('empty');
+        parentSlot.classList.remove('correct', 'incorrect');
+        document.getElementById('pool-container').appendChild(card);
+        card.classList.remove('selected');
+        if (selectedElement === card) selectedElement = null;
+        return;
+    }
+
+    // Selecionar/Desselecionar cartão na zona de opções
+    if (selectedElement === card) {
+        card.classList.remove('selected');
+        selectedElement = null;
+    } else {
+        if (selectedElement) {
+            selectedElement.classList.remove('selected');
+        }
+        selectedElement = card;
+        card.classList.add('selected');
+    }
+}
+
+function handleSlotClick(slotTarget) {
+    // Se temos um cartão selecionado nas opções, colocamo-lo neste slot
+    if (selectedElement && !selectedElement.closest('.slot-target')) {
+        // Se o slot já tiver um cartão, devolve o antigo cartão para o pool
+        if (slotTarget.children.length > 0) {
+            const existingCard = slotTarget.children[0];
+            document.getElementById('pool-container').appendChild(existingCard);
+        }
+
+        slotTarget.appendChild(selectedElement);
+        slotTarget.classList.remove('empty', 'correct', 'incorrect');
+        selectedElement.classList.remove('selected');
+        selectedElement = null;
+    }
+}
+
+function checkOrder() {
+    const slots = document.querySelectorAll('.slot-target');
+    let allFilled = true;
+    let allCorrect = true;
+
+    slots.forEach((slot, index) => {
+        slot.classList.remove('correct', 'incorrect');
+
+        if (slot.children.length === 0) {
+            allFilled = false;
+        } else {
+            const card = slot.children[0];
+            const text = card.dataset.text;
+
+            if (text === currentCorrectOrder[index]) {
+                slot.classList.add('correct');
+            } else {
+                slot.classList.add('incorrect');
+                allCorrect = false;
+            }
+        }
+    });
+
+    const msg = document.getElementById('message');
+
+    if (!allFilled) {
+        msg.innerText = "Preenche todos os espaços em branco antes de verificar!";
+        msg.style.color = "var(--accent-color)";
+        return;
+    }
+
+    if (allCorrect) {
+        msg.innerText = "🎉 Excelente! Colocaste todos os eventos na ordem correta!";
+        msg.style.color = "var(--success-color)";
+        document.getElementById('check-btn').style.display = 'none';
+        
+        if (currentLevel < allEvents.length - 1) {
+            document.getElementById('next-btn').style.display = 'block';
+        } else {
+            msg.innerText = "🏆 PARABÉNS! Concluiste todos os níveis da Cronologia Bíblica!";
+        }
+    } else {
+        msg.innerText = "Existem eventos fora de ordem. Os blocos a vermelho estão incorretos!";
+        msg.style.color = "var(--error-color)";
+    }
+}
+
+function nextLevel() {
+    currentLevel++;
+    loadLevel();
+}
+
+// Iniciar o jogo
+loadLevel();
+</script>
+
+</body>
+</html>
