@@ -2,13 +2,15 @@
 <html lang="pt">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>A Arca de Noé - Salva os animais</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>A Arca de Noé - Corrida dos Animais</title>
   <style>
     * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
+      user-select: none; /* Evita selecionar texto ao tocar rapidamente nos botões */
+      -webkit-user-select: none;
     }
     body {
       background-color: #0b131e;
@@ -22,50 +24,74 @@
       padding: 10px;
     }
     h1 {
-      font-size: 1.5rem;
-      margin-bottom: 10px;
+      font-size: 1.3rem;
+      margin-bottom: 8px;
       text-align: center;
       color: #ff8c42;
     }
     #game-container {
       position: relative;
-      border: 4px solid #ff8c42;
+      border: 3px solid #ff8c42;
       border-radius: 8px;
       overflow: hidden;
       box-shadow: 0 8px 24px rgba(0, 0, 0, 0.7);
+      max-width: 100%;
     }
     canvas {
       background: linear-gradient(to bottom, #0f1c2e 0%, #172a45 70%, #0d1b2a 100%);
       display: block;
+      /* Mantém o aspeto proporcional no ecrã do telemóvel */
+      max-width: 100%;
+      height: auto;
     }
-    .instructions {
+    /* Controlo de Botões no Ecrã */
+    .controls {
+      display: flex;
+      justify-content: space-between;
+      width: 320px; /* Mesma largura do canvas */
+      max-width: 100%;
       margin-top: 12px;
-      font-size: 0.9rem;
-      color: #f5f0eb;
-      text-align: center;
+      gap: 12px;
     }
-    .instructions strong {
+    .btn-control {
+      flex: 1;
+      padding: 16px 0;
+      background-color: #172a45;
       color: #ff8c42;
+      border: 2px solid #ff8c42;
+      border-radius: 8px;
+      font-size: 1.5rem;
+      font-weight: bold;
+      text-align: center;
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+    .btn-control:active {
+      background-color: #ff8c42;
+      color: #0b131e;
     }
   </style>
 </head>
 <body>
 
-  <h1>A Arca de Noé: Salva os Animais</h1>
+  <h1>A Arca de Noé</h1>
   
   <div id="game-container">
-    <canvas id="gameCanvas" width="400" height="500"></canvas>
+    <!-- Reduzido para 320px de largura e aumentado para 520px de altura -->
+    <canvas id="gameCanvas" width="320" height="520"></canvas>
   </div>
 
-  <p class="instructions">
-    Usa as setas <strong>Esquerda / Direita</strong> (ou toca nos lados do ecrã) para mover a Arca.
-  </p>
+  <!-- Botões visíveis para telemóvel -->
+  <div class="controls">
+    <div class="btn-control" id="btnLeft">◀</div>
+    <div class="btn-control" id="btnRight">▶</div>
+  </div>
 
   <script>
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
 
-    // Web Audio API para efeitos sonoros
+    // Web Audio API
     const AudioContext = window.AudioContext || window.webkitAudioContext;
     let audioCtx = null;
 
@@ -86,16 +112,14 @@
       const now = audioCtx.currentTime;
 
       if (type === 'catch') {
-        // Som agudo e rápido ao apanhar animal
         osc.type = 'sine';
-        osc.frequency.setValueAtTime(523.25, now); // C5
-        osc.frequency.exponentialRampToValueAtTime(880, now + 0.1); // A5
+        osc.frequency.setValueAtTime(523.25, now);
+        osc.frequency.exponentialRampToValueAtTime(880, now + 0.1);
         gain.gain.setValueAtTime(0.15, now);
         gain.gain.exponentialRampToValueAtTime(0.01, now + 0.1);
         osc.start(now);
         osc.stop(now + 0.1);
       } else if (type === 'hit') {
-        // Som grave de impacto ao atingir tempestade
         osc.type = 'sawtooth';
         osc.frequency.setValueAtTime(150, now);
         osc.frequency.exponentialRampToValueAtTime(40, now + 0.2);
@@ -104,7 +128,6 @@
         osc.start(now);
         osc.stop(now + 0.2);
       } else if (type === 'gameover') {
-        // Melodia descendente no Game Over
         osc.type = 'triangle';
         osc.frequency.setValueAtTime(300, now);
         osc.frequency.setValueAtTime(200, now + 0.15);
@@ -122,26 +145,24 @@
     let gameOver = false;
     let frameCount = 0;
 
-    // Carregar o Recorde Guardado
     let highScore = localStorage.getItem('arca_highscore') || 0;
 
-    // A Arca
+    // A Arca (ajustada para a nova largura)
     const ark = {
-      x: canvas.width / 2 - 40,
+      x: canvas.width / 2 - 35,
       y: canvas.height - 50,
-      width: 80,
-      height: 35,
-      speed: 7
+      width: 70,
+      height: 32,
+      speed: 6
     };
 
-    // Lista de Objetos
     const items = [];
     const animalEmojis = ['🦁', '🐘', '🦒', '🦓', '🐑', '🕊️'];
     const hazardEmoji = '🌩️';
 
-    // Teclas
     const keys = { right: false, left: false };
 
+    // Controlos por Teclado
     document.addEventListener('keydown', (e) => {
       initAudio();
       if (e.key === 'ArrowRight' || e.key === 'Right') keys.right = true;
@@ -154,26 +175,29 @@
       if (e.key === 'ArrowLeft' || e.key === 'Left') keys.left = false;
     });
 
-    // Suporte para Ecrã Tátil
-    canvas.addEventListener('touchstart', (e) => {
-      initAudio();
-      if (gameOver) {
-        restartGame();
-        return;
-      }
-      const touchX = e.touches[0].clientX - canvas.getBoundingClientRect().left;
-      if (touchX < canvas.width / 2) {
-        keys.left = true;
-        keys.right = false;
-      } else {
-        keys.right = true;
-        keys.left = false;
-      }
-    });
+    // Controlos pelos Botões do Ecrã
+    const btnLeft = document.getElementById('btnLeft');
+    const btnRight = document.getElementById('btnRight');
 
-    canvas.addEventListener('touchend', () => {
-      keys.left = false;
-      keys.right = false;
+    const handlePressLeft = (e) => { e.preventDefault(); initAudio(); if(gameOver) restartGame(); keys.left = true; };
+    const handleReleaseLeft = (e) => { e.preventDefault(); keys.left = false; };
+    const handlePressRight = (e) => { e.preventDefault(); initAudio(); if(gameOver) restartGame(); keys.right = true; };
+    const handleReleaseRight = (e) => { e.preventDefault(); keys.right = false; };
+
+    btnLeft.addEventListener('touchstart', handlePressLeft);
+    btnLeft.addEventListener('touchend', handleReleaseLeft);
+    btnLeft.addEventListener('mousedown', handlePressLeft);
+    btnLeft.addEventListener('mouseup', handleReleaseLeft);
+
+    btnRight.addEventListener('touchstart', handlePressRight);
+    btnRight.addEventListener('touchend', handleReleaseRight);
+    btnRight.addEventListener('mousedown', handlePressRight);
+    btnRight.addEventListener('mouseup', handleReleaseRight);
+
+    // Reiniciar ao tocar no ecrã de game over
+    canvas.addEventListener('touchstart', () => {
+      initAudio();
+      if (gameOver) restartGame();
     });
 
     function spawnItem() {
@@ -183,9 +207,9 @@
         : animalEmojis[Math.floor(Math.random() * animalEmojis.length)];
 
       items.push({
-        x: Math.random() * (canvas.width - 30),
+        x: Math.random() * (canvas.width - 28),
         y: -30,
-        size: 28,
+        size: 26,
         speed: 1.5 + Math.random() * 1 + (score * 0.02),
         isHazard: isHazard,
         emoji: emoji
@@ -196,7 +220,6 @@
       gameOver = true;
       playSound('gameover');
 
-      // Guardar Recorde
       if (score > highScore) {
         highScore = score;
         localStorage.setItem('arca_highscore', highScore);
@@ -222,7 +245,6 @@
         const item = items[i];
         item.y += item.speed;
 
-        // Colisão
         if (
           item.x < ark.x + ark.width &&
           item.x + item.size > ark.x &&
@@ -241,7 +263,6 @@
           continue;
         }
 
-        // Remover ao sair do ecrã
         if (item.y > canvas.height) {
           if (!item.isHazard) {
             score = Math.max(0, score - 5);
@@ -259,17 +280,17 @@
       ctx.beginPath();
       ctx.moveTo(ark.x, ark.y);
       ctx.lineTo(ark.x + ark.width, ark.y);
-      ctx.lineTo(ark.x + ark.width - 10, ark.y + ark.height);
-      ctx.lineTo(ark.x + 10, ark.y + ark.height);
+      ctx.lineTo(ark.x + ark.width - 8, ark.y + ark.height);
+      ctx.lineTo(ark.x + 8, ark.y + ark.height);
       ctx.closePath();
       ctx.fill();
 
       // Casinha da Arca
       ctx.fillStyle = '#ff8c42';
-      ctx.fillRect(ark.x + 20, ark.y - 12, ark.width - 40, 12);
+      ctx.fillRect(ark.x + 18, ark.y - 10, ark.width - 36, 10);
 
       // Desenhar Emojis
-      ctx.font = '24px serif';
+      ctx.font = '22px serif';
       ctx.textAlign = 'left';
       ctx.textBaseline = 'top';
       items.forEach(item => {
@@ -278,9 +299,9 @@
 
       // Interface Superior
       ctx.fillStyle = '#f5f0eb';
-      ctx.font = 'bold 15px sans-serif';
-      ctx.fillText(`Pontos: ${score}`, 15, 20);
-      ctx.fillText(`Vidas: ${'❤️'.repeat(Math.max(0, lives))}`, canvas.width - 135, 20);
+      ctx.font = 'bold 14px sans-serif';
+      ctx.fillText(`Pts: ${score}`, 10, 15);
+      ctx.fillText(`${'❤️'.repeat(Math.max(0, lives))}`, canvas.width - 110, 15);
 
       // Ecrã de Game Over
       if (gameOver) {
@@ -289,20 +310,20 @@
 
         ctx.fillStyle = '#ff8c42';
         ctx.textAlign = 'center';
-        ctx.font = 'bold 26px sans-serif';
-        ctx.fillText('Fim de Jogo!', canvas.width / 2, canvas.height / 2 - 50);
+        ctx.font = 'bold 22px sans-serif';
+        ctx.fillText('Fim de Jogo!', canvas.width / 2, canvas.height / 2 - 40);
 
         ctx.fillStyle = '#f5f0eb';
-        ctx.font = '18px sans-serif';
-        ctx.fillText(`Pontuação final: ${score}`, canvas.width / 2, canvas.height / 2 - 10);
+        ctx.font = '16px sans-serif';
+        ctx.fillText(`Pontuação final: ${score}`, canvas.width / 2, canvas.height / 2 - 5);
         
         ctx.fillStyle = '#ffaa5b';
-        ctx.font = 'bold 16px sans-serif';
-        ctx.fillText(`🏆 Recorde Pessoal: ${highScore}`, canvas.width / 2, canvas.height / 2 + 25);
+        ctx.font = 'bold 15px sans-serif';
+        ctx.fillText(`🏆 Recorde: ${highScore}`, canvas.width / 2, canvas.height / 2 + 25);
 
-        ctx.font = '14px sans-serif';
+        ctx.font = '13px sans-serif';
         ctx.fillStyle = '#f5f0eb';
-        ctx.fillText('Pressiona ESPAÇO ou TOQUE para recomeçar', canvas.width / 2, canvas.height / 2 + 65);
+        ctx.fillText('Toca num botão para recomeçar', canvas.width / 2, canvas.height / 2 + 65);
       }
     }
 
@@ -312,7 +333,7 @@
       gameOver = false;
       items.length = 0;
       frameCount = 0;
-      ark.x = canvas.width / 2 - 40;
+      ark.x = canvas.width / 2 - 35;
       gameLoop();
     }
 
