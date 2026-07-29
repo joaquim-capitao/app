@@ -1,5 +1,5 @@
 # Apps e Jogos
-(Aqui estão alguns jogos didático para quem gosta da Bíblia. Se descobrirem algum bug 🪲, agradeço o vosso feedback.)
+(Aqui estão alguns jogos didáticos para quem gosta da Bíblia. Se descobrires algum bug 🪲, agradeço o teu feedback.)
 
 [Quiz Bíblico](https://joaquim-capitao.github.io/app/quiz-biblico.html)
 
