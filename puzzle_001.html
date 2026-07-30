@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Puzzle: Noé no Paraíso</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #1b1b47;
+      color: #cfd3dc;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      margin: 0;
+      padding: 10px;
+      text-align: center;
+    }
+
+    h1 {
+      color: #fa700f;
+      margin-bottom: 5px;
+      font-size: 1.8rem;
+    }
+
+    p {
+      color: #cfd3dc;
+      margin-top: 0;
+      margin-bottom: 15px;
+      font-size: 0.95rem;
+    }
+
+    #controls {
+      margin-bottom: 15px;
+    }
+
+    button {
+      padding: 10px 20px;
+      font-size: 15px;
+      font-weight: bold;
+      background-color: #f07823;
+      color: #ffffff;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.4);
+      transition: background-color 0.2s ease;
+    }
+
+    button:hover {
+      background-color: #d66418;
+    }
+
+    #canvas-container {
+      box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+      border-radius: 8px;
+      overflow: hidden;
+      background: #111116;
+      border: 1px solid #2d2d3a;
+      max-width: 100%;
+      display: flex;
+      justify-content: center;
+    }
+
+    canvas {
+      display: block;
+      cursor: pointer;
+      max-width: 100%;
+      height: auto;
+      touch-action: manipulation;
+    }
+
+    /* Estilos do Rodapé */
+    .footer-info {
+      margin-top: 30px;
+      padding: 15px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.85rem;
+      color: #a0a0b0;
+      border-top: 1px solid #2d2d3a;
+      width: 100%;
+      max-width: 800px;
+    }
+
+    .app-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: #fa700f;
+      text-decoration: none;
+      font-weight: bold;
+      transition: color 0.2s;
+    }
+
+    .app-link:hover {
+      color: #f07823;
+      text-decoration: underline;
+    }
+
+    .app-link svg {
+      width: 18px;
+      height: 18px;
+      fill: currentColor;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Puzzle: Noé no Paraíso</h1>
+  <p>Clica numa peça e depois noutra até que a imagem fique montada!</p>
+
+  <div id="controls">
+    <button onclick="embaralhar()">Embaralhar as Peças</button>
+  </div>
+
+  <div id="canvas-container">
+    <canvas id="puzzleCanvas"></canvas>
+  </div>
+
+  <!-- RODAPÉ COM ATUALIZAÇÃO E LINK -->
+  <div class="footer-info">
+      <span>Última atualização: 30 de julho de 2026</span>
+      <a href="https://joaquim-capitao.github.io/app/index" class="app-link" target="_blank" rel="noopener noreferrer">
+          <svg viewBox="0 0 24 24">
+              <path d="M4 8h4V4H4v4zm6 12h4v-4h-4v4zm-6 0h4v-4H4v4zm0-6h4v-4H4v4zm6 0h4v-4h-4v4zm6-10v4h4V4h-4zm-6 4h4V4h-4v4zm6 6h4v-4h-4v4zm0 6h4v-4h-4v4z"/>
+          </svg>
+          Outros jogos e apps
+      </a>
+  </div>
+
+  <script>
+    const canvas = document.getElementById('puzzleCanvas');
+    const ctx = canvas.getContext('2d');
+
+    const ROWS = 4;
+    const COLS = 6;
+    
+    let pieces = [];
+    let selectedPiece = null;
+    let img = new Image();
+
+    img.src = 'https://pub-c38593a6a54c4592b36b762dfb18e232.r2.dev/puzzles/paradise_234023823.jpg'; 
+
+    img.onload = () => {
+      redimensionarCanvas();
+      iniciarJogo();
+    };
+
+    function redimensionarCanvas() {
+      const maxWidth = Math.min(window.innerWidth - 30, img.width || 800);
+      const aspectRatio = img.height / img.width;
+
+      canvas.width = maxWidth;
+      canvas.height = maxWidth * aspectRatio;
+
+      if (pieces.length > 0) {
+        desenhar();
+      }
+    }
+
+    window.addEventListener('resize', () => {
+      if (img.complete) {
+        redimensionarCanvas();
+      }
+    });
+
+    function iniciarJogo() {
+      pieces = [];
+      for (let r = 0; r < ROWS; r++) {
+        for (let c = 0; c < COLS; c++) {
+          pieces.push({
+            origRow: r,
+            origCol: c,
+            currentRow: r,
+            currentCol: c
+          });
+        }
+      }
+      embaralhar();
+    }
+
+    function embaralhar() {
+      for (let i = pieces.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        let tempRow = pieces[i].currentRow;
+        let tempCol = pieces[i].currentCol;
+
+        pieces[i].currentRow = pieces[j].currentRow;
+        pieces[i].currentCol = pieces[j].currentCol;
+
+        pieces[j].currentRow = tempRow;
+        pieces[j].currentCol = tempCol;
+      }
+      selectedPiece = null;
+      desenhar();
+    }
+
+    function desenhar() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+      const w = canvas.width / COLS;
+      const h = canvas.height / ROWS;
+
+      const sourceW = img.width / COLS;
+      const sourceH = img.height / ROWS;
+
+      pieces.forEach(p => {
+        const sx = p.origCol * sourceW;
+        const sy = p.origRow * sourceH;
+        const dx = p.currentCol * w;
+        const dy = p.currentRow * h;
+
+        ctx.drawImage(img, sx, sy, sourceW, sourceH, dx, dy, w, h);
+
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.7)';
+        ctx.lineWidth = 1.5;
+        ctx.strokeRect(dx, dy, w, h);
+
+        if (selectedPiece === p) {
+          ctx.strokeStyle = '#f07823';
+          ctx.lineWidth = 4;
+          ctx.strokeRect(dx + 2, dy + 2, w - 4, h - 4);
+        }
+      });
+    }
+
+    canvas.addEventListener('click', (e) => {
+      const rect = canvas.getBoundingClientRect();
+      
+      const scaleX = canvas.width / rect.width;
+      const scaleY = canvas.height / rect.height;
+
+      const x = (e.clientX - rect.left) * scaleX;
+      const y = (e.clientY - rect.top) * scaleY;
+
+      const w = canvas.width / COLS;
+      const h = canvas.height / ROWS;
+
+      const clickedCol = Math.floor(x / w);
+      const clickedRow = Math.floor(y / h);
+
+      const clickedPiece = pieces.find(p => p.currentRow === clickedRow && p.currentCol === clickedCol);
+
+      if (!clickedPiece) return;
+
+      if (!selectedPiece) {
+        selectedPiece = clickedPiece;
+      } else {
+        let tempRow = selectedPiece.currentRow;
+        let tempCol = selectedPiece.currentCol;
+
+        selectedPiece.currentRow = clickedPiece.currentRow;
+        selectedPiece.currentCol = clickedPiece.currentCol;
+
+        clickedPiece.currentRow = tempRow;
+        clickedPiece.currentCol = tempCol;
+
+        selectedPiece = null;
+        verificarVitoria();
+      }
+
+      desenhar();
+    });
+
+    function verificarVitoria() {
+      const venceu = pieces.every(p => p.origRow === p.currentRow && p.origCol === p.currentCol);
+      if (venceu) {
+        setTimeout(() => alert('Parabéns! Completaste o puzzle!'), 100);
+      }
+    }
+  </script>
+</body>
+</html>
