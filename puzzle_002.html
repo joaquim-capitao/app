@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Puzzle: Pregação no jardim</title>
+  <title>Puzzle: Noé no Paraíso</title>
   <style>
     * {
       box-sizing: border-box;
@@ -73,11 +73,47 @@
       height: auto;
       touch-action: manipulation;
     }
+
+    /* Estilos do Rodapé */
+    .footer-info {
+      margin-top: 30px;
+      padding: 15px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.85rem;
+      color: #a0a0b0;
+      border-top: 1px solid #2d2d3a;
+      width: 100%;
+      max-width: 800px;
+    }
+
+    .app-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: #fa700f;
+      text-decoration: none;
+      font-weight: bold;
+      transition: color 0.2s;
+    }
+
+    .app-link:hover {
+      color: #f07823;
+      text-decoration: underline;
+    }
+
+    .app-link svg {
+      width: 18px;
+      height: 18px;
+      fill: currentColor;
+    }
   </style>
 </head>
 <body>
 
-  <h1>Puzzle: Pregação no Jardim</h1>
+  <h1>Puzzle: Noé no Paraíso</h1>
   <p>Clica numa peça e depois noutra até que a imagem fique montada!</p>
 
   <div id="controls">
@@ -88,7 +124,7 @@
     <canvas id="puzzleCanvas"></canvas>
   </div>
 
-   <!-- RODAPÉ COM ATUALIZAÇÃO E LINK -->
+  <!-- RODAPÉ COM ATUALIZAÇÃO E LINK -->
   <div class="footer-info">
       <span>Última atualização: 30 de julho de 2026</span>
       <a href="https://joaquim-capitao.github.io/app/index" class="app-link" target="_blank" rel="noopener noreferrer">
@@ -98,7 +134,7 @@
           Outros jogos e apps
       </a>
   </div>
-  
+
   <script>
     const canvas = document.getElementById('puzzleCanvas');
     const ctx = canvas.getContext('2d');
