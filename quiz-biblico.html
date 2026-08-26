@@ -14,6 +14,7 @@
             --primary-hover: #4f46e5;
             --success: #10b981;
             --danger: #ef4444;
+            --warning: #f59e0b;
             --border: #334155;
         }
 
@@ -116,11 +117,11 @@
         <!-- ECRÃ DO JOGO -->
         <div id="game-screen" class="screen active">
             <h1 style="color: #f97316;">Quiz Bíblico</h1>
-            <p class="subtitle">Se errares uma pergunta, voltas ao início!</p>
+            <p class="subtitle">Responde a 50 perguntas com um máximo de 2 erros permitidos.</p>
             
             <div class="progress-text">
-                <span id="streak-label">Sequência Atual: 0</span>
-                <span>Objetivo: 50</span>
+                <span id="streak-label">Pergunta: 1 / 50</span>
+                <span id="errors-label" style="color: #f87171;">Erros: 0 / 3</span>
             </div>
             <div class="progress-bar"><div id="progress-fill" class="progress-fill"></div></div>
 
@@ -132,23 +133,16 @@
             </div>
         </div>
 
-        <!-- ECRÃ DE FIM DE JOGO (GAME OVER) -->
-        <div id="gameover-screen" class="screen">
-            <h1 style="color: var(--danger)">Fim do Jogo! É bom ler a Bíblia de vez em quando...</h1>
-            <p id="gameover-msg" style="margin-top: 15px; font-size: 18px;"></p>
-            <button class="btn-action" onclick="restartGame()">Tentar Novamente</button>
-        </div>
-
-        <!-- ECRÃ DE VITÓRIA -->
-        <div id="victory-screen" class="screen">
-            <h1 style="color: var(--success)">👑 Excelente!</h1>
-            <p style="margin-top: 15px;">Muitos parabéns! Conseguiste acertar em 50 perguntas seguidas!</p>
-            <button class="btn-action" onclick="restartGame()">Jogar Novamente</button>
+        <!-- ECRÃ DE RESULTADO / FIM DE JOGO -->
+        <div id="result-screen" class="screen">
+            <h1 id="result-title" style="margin-bottom: 15px;"></h1>
+            <p id="result-msg" style="margin-top: 15px; font-size: 18px; line-height: 1.5;"></p>
+            <button id="result-btn" class="btn-action" onclick="restartGame()">Voltar a Jogar</button>
         </div>
 
         <!-- RODAPÉ COM ATUALIZAÇÃO E LINK -->
         <div class="footer-info">
-            <span>Última atualização: 26 de agosto de 2026</span>
+            <span>Última atualização: 11 de agosto de 2026</span>
             <a href="https://joaquim-capitao.github.io/app/index" class="app-link" target="_blank" rel="noopener noreferrer">
                 <svg viewBox="0 0 24 24">
                     <path d="M4 8h4V4H4v4zm6 12h4v-4h-4v4zm-6 0h4v-4H4v4zm0-6h4v-4H4v4zm6 0h4v-4h-4v4zm6-10v4h4V4h-4zm-6 4h4V4h-4v4zm6 6h4v-4h-4v4zm0 6h4v-4h-4v4z"/>
@@ -160,7 +154,6 @@
 
     <script>
         const poolDePerguntas = [
-            // --- PERGUNTAS BÍBLICAS (Versão PT-PT e terminologia jw.org) ---
             { q: 'Quem é o autor da Bíblia?', o: ['Jeová', 'Moisés', 'Paulo'], c: 0 },
             { q: 'Qual foi o primeiro homem criado por Deus?', o: ['Noé', 'Adão', 'Abraão'], c: 1 },
             { q: 'Quem construiu a arca para sobreviver ao Dilúvio?', o: ['Moisés', 'Ló', 'Noé'], c: 2 },
@@ -168,7 +161,7 @@
             { q: 'Qual é o nome do primeiro livro da Bíblia?', o: ['Êxodo', 'Salmos', 'Génesis'], c: 2 },
             { q: 'Onde é que Jesus nasceu?', o: ['Jerusalém', 'Belém', 'Nazaré'], c: 1 },
             { q: 'Quem libertou os israelitas do Egito?', o: ['Josué', 'Moisés', 'David'], c: 1 },
-            { q: 'Qual era a profissão de Jesus?', o: ['Pescador', 'Carpinteiro', 'Agricultor'], c: 1 },
+            { q: 'Qual era a profissão de Jesus?', o: ['Carpinteiro', 'Pescador', 'Agricultor'], c: 0 },
             { q: 'Quem foi o homem mais forte?', o: ['Sansão', 'Golias', 'Gideão'], c: 0 },
             { q: 'Quem derrotou o gigante Golias?', o: ['Saul', 'Salomão', 'David'], c: 2 },
             { q: 'Qual dos apóstolos negou Jesus três vezes?', o: ['João', 'Pedro', 'Judas'], c: 1 },
@@ -270,15 +263,15 @@
             { q: 'Quem foi Agar?', o: ['Serva egípcia de Sara', 'Serva egípcia de Rebeca', 'Serva egípcia de Raquel'], c: 0 },
             { q: 'O que é a Jerusalém de Cima mencionada em Gálatas 4:26?', o: ['A parte celestial da organização de Deus', 'Os cristãos ungidos', 'O paraíso celestial'], c: 0 },
             { q: 'O que é a Nova Jerusalém?', o: ['A parte celestial da organização de Deus', 'Os cristãos ungidos na terra', 'Os cristãos ungidos ressuscitados'], c: 2 },
-			{ q: 'Quais são os 4 atributos de Jeová?', o: ['Amor, Misericórdia, paz e felicidade', 'Amor, justiça, poder e discernimento', 'Amor, sabedoria, poder e justiça'], c: 2 },
-			{ q: 'Quem eram os levitas?', o: ['Sacerdotes descendentes de Levi ', 'Habitantes da cidade de Leviate', 'Profetas do tempo de Jeremias'], c: 0 },
-			{ q: 'Faraó era ...', o: ['O nome de um rei do Egito', 'O título dos reis do Egito', 'Primeiro nome de Faraó Ramsés'], c: 1 },
-			{ q: 'A sinagoga era ...', o: ['O nome que se dava ao templo nos dias de Jesus', 'O lugar onde os judeus se reuniam para ler as Escrituras', 'O templo dos adoradores de Baal'], c: 1 },
-			{ q: 'Em que ano nasceu Jesus?', o: ['Ano Zero', 'Ano 1 EC', 'Ano 2 AEC'], c: 2 },
-			{ q: 'Em que ano apareceu o Messias?', o: ['29 EC', '30 EC', '2 AEC'], c: 0 },
-			{ q: 'O termo "profetas menores" refere-se a...', o: ['Profetas de baixa estatura', 'Doze livros proféticos que são menores em tamanho' , 'Dez livros proféticos escritos durante o Exílio em Babilónia'], c: 1 },
-			{ q: 'Um apóstata é ...', o: ['Alguém que persegue o povo de Deus', 'Alguém que faz apostas ilegais', 'Alguém que abandona a adoração verdadeira'], c: 2 },
-			{ q: 'A quem Jesus disse "persiste em apegar-te ao que tens"?', o: ['Apóstolo Pedro', 'Nicodemos e outros sacerdotes', 'Congregação de Filadélfia'], c: 2 },
+            { q: 'Quais são os 4 atributos de Jeová?', o: ['Amor, Misericórdia, paz e felicidade', 'Amor, justiça, poder e discernimento', 'Amor, sabedoria, poder e justiça'], c: 2 },
+            { q: 'Quem eram os levitas?', o: ['Sacerdotes descendentes de Levi ', 'Habitantes da cidade de Leviate', 'Profetas do tempo de Jeremias'], c: 0 },
+            { q: 'Faraó era ...', o: ['O nome de um rei do Egito', 'O título dos reis do Egito', 'Primeiro nome de Faraó Ramsés'], c: 1 },
+            { q: 'A sinagoga era ...', o: ['O nome que se dava ao templo nos dias de Jesus', 'O lugar onde os judeus se reuniam para ler as Escrituras', 'O templo dos adoradores de Baal'], c: 1 },
+            { q: 'Em que ano nasceu Jesus?', o: ['Ano Zero', 'Ano 1 EC', 'Ano 2 AEC'], c: 2 },
+            { q: 'Em que ano apareceu o Messias?', o: ['29 EC', '30 EC', '2 AEC'], c: 0 },
+            { q: 'O termo "profetas menores" refere-se a...', o: ['Profetas de baixa estatura', 'Doze livros proféticos que são menores em tamanho' , 'Dez livros proféticos escritos durante o Exílio em Babilónia'], c: 1 },
+            { q: 'Um apóstata é ...', o: ['Alguém que persegue o povo de Deus', 'Alguém que faz apostas ilegais', 'Alguém que abandona a adoração verdadeira'], c: 2 },
+            { q: 'A quem Jesus disse "persiste em apegar-te ao que tens"?', o: ['Apóstolo Pedro', 'Nicodemos e outros sacerdotes', 'Congregação de Filadélfia'], c: 2 },
             { q: 'Quem escreveu Génesis?', o: ['Adão', 'Moisés', 'Abraão'], c: 1 },
             { q: 'Quem escreveu Êxodo?', o: ['Moisés', 'Jacó', 'José'], c: 0 },
             { q: 'Quem escreveu Levítico?', o: ['Levitas', 'Arão', 'Moisés'], c: 2 },
@@ -339,55 +332,59 @@
             { q: 'Quem escreveu Tiago?', o: ['Tiago (irmão de Jesus)', 'Tiago (filho de Zebedeu)', 'Pedro'], c: 0 },
             { q: 'Quem escreveu 1 Pedro?', o: ['Pedro', 'João', 'Paulo'], c: 0 },
             { q: 'Quem escreveu 2 Pedro?', o: ['Pedro', 'Judas', 'Silvano'], c: 0 },
-			{ q: 'Qual o equivalente hebraico de "Cristo"?', o: ['Messias', 'Jesus', 'Salvador'], c: 0 },
-			{ q: 'Qual o equivalente hebraico de "Tiago"?', o: ['Jacó', 'Isaque', 'Abraão'], c: 0 },
-			{ q: 'Onde Jesus transformou água em vinho"?', o: ['Canaã', 'Caná', 'Cafarnaum'], c: 1 },
-	        { q: 'Que nome próprio tem exatamente o mesmo significado de "Jesus"?', o: ['Josué', 'Cristo', 'Messias'], c: 0 },
-			{ q: 'Onde estava Pedro quando escreveu a sua primeira carta?', o: ['Jerusalém', 'Babilónia', 'Galileia'], c: 1 },
+            { q: 'Qual o equivalente hebraico de "Cristo"?', o: ['Messias', 'Jesus', 'Salvador'], c: 0 },
+            { q: 'Qual o equivalente hebraico de "Tiago"?', o: ['Jacó', 'Isaque', 'Abraão'], c: 0 },
+            { q: 'Onde Jesus transformou água em vinho"?', o: ['Canaã', 'Caná', 'Cafarnaum'], c: 1 },
+            { q: 'Que nome próprio tem exatamente o mesmo significado de "Jesus"?', o: ['Josué', 'Cristo', 'Messias'], c: 0 },
+            { q: 'Onde estava Pedro quando escreveu a sua primeira carta?', o: ['Jerusalém', 'Babilónia', 'Galileia'], c: 1 },
             { q: 'Quem escreveu 1 João?', o: ['Apóstolo João', 'João, o Batizador', 'João Marcos'], c: 0 },
             { q: 'Quem escreveu 2 João?', o: ['João, pai de Simão Pedro', 'João Marcos', 'Apóstolo João'], c: 2 },
             { q: 'Quem escreveu 3 João?', o: ['Apóstolo João', 'João Batista', 'Demétrio'], c: 0 },
             { q: 'Quem escreveu Judas?', o: ['Judas, irmão de Jesus', 'Judas, também chamado Barsabás', 'Judas Tadeu'], c: 0 },
             { q: 'Quem escreveu Apocalipse?', o: ['João', 'Paulo', 'Pedro'], c: 0 },
-			{ q: 'O Rei Asa governou sobre o reino de... ', o: ['Judá', 'Israel', 'Assíria'], c: 0 },
-			{ q: 'O Rei Jeroboão governou sobre o reino de...', o: ['Egito', 'Judá', 'Israel'], c: 2 },
-			{ q: 'Elias profetizou durante o reinado de...', o: ['Acabe', 'Jeoás', 'Jeroboão'], c: 0 },
-			{ q: 'Amós profetizou durante o reinado de...', o: ['Jeroboão', 'Jeroboão II', 'Jeorão'], c: 1 },
-			{ q: 'O Reino de Israel de 10 tribos terminou em...', o: ['607 AEC', '740 AEC', '539 AEC'], c: 1 },
-			{ q: 'Jeremias foi contemporâneo de... ', o: ['Daniel, Ezequiel e Obadias', 'Miqueias, Isaías e Oseias', 'Joel, Jonas e Amós'], c: 0 },
-			{ q: 'Quantas vezes aparece o nome divino nas Escrituras Gregas?', o: ['Mais de 7000 vezes', '237 vezes', 'Não aparece'], c: 1 },
-			{ q: 'Em que ano João Batista iniciou o seu ministério?', o: ['30 EC', '29 EC', '31 EC'], c: 1 },
-			{ q: 'Que cidades ficavam próximas do Mar da Galileia?', o: ['Cafarnaum, Betsaida e Tiberíades', 'Jerusalém, Betânia e Naim', 'Jericó, Efraim e Betfagé'], c: 0 },
-			{ q: 'Jesus entrou em Jerusalém montado num jumento em...', o: ['14 de nisã', 'Data desconhecida', '9 de nisã'], c: 2 },
-			{ q: 'Quem foi escolhido como apóstolo no lugar de Judas Iscariotes?', o: ['Paulo', 'Barnabé', 'Matias'], c: 2 },
-			{ q: 'A lâmina de ouro no turbante do sumo sacerdote dizia:', o: ['A Santidade pertence a Jeová', 'Ama a Jeová de todo o coração', 'Escuta e obedece'], c: 0 },
-			{ q: 'Que árvore representava a garantia de Deus de dar vida eterna?', o: ['Árvore do conhecimento do que é bom e do que é mau', 'Árvore da vida', 'Árvore grande'], c: 1 },
-			{ q: 'Nome da região a norte da Grécia que ganhou destaque sob o domínio de Alexandre, o Grande', o: ['Macedónia', 'Ásia Menor', 'Alexandria'], c: 0 },
-			{ q: 'O grupo de soldados romanos que servia como guarda pessoal do imperador chamava-se....', o: ['Guarda Pretoriana', 'Guarda Imperial', 'Guarda Romana'], c: 0 },
-			{ q: 'Qual era outro nome de Esaú, filho de Isaque?', o: ['Boaz', 'Edom', 'Issacar'], c: 1 },	
-			{ q: 'Que dois objetos eram usados pelo sumo sacerdote para determinar a vontade divina?', o: ['Crisólito e Jade', 'Jaquim e Boaz', 'Urim e Tumim'], c: 2 },
-			{ q: 'Qual foi a mulher que Jesus defendeu dizendo "Quem não pecou, atire a primeira pedra"?', o: ['Maria Madalena', 'Joana', 'Jesus nunca disse essa frase'], c: 2 },
+            { q: 'O Rei Asa governou sobre o reino de... ', o: ['Judá', 'Israel', 'Assíria'], c: 0 },
+            { q: 'O Rei Jeroboão governou sobre o reino de...', o: ['Egito', 'Judá', 'Israel'], c: 2 },
+            { q: 'Elias profetizou durante o reinado de...', o: ['Acabe', 'Jeoás', 'Jeroboão'], c: 0 },
+            { q: 'Amós profetizou durante o reinado de...', o: ['Jeroboão', 'Jeroboão II', 'Jeorão'], c: 1 },
+            { q: 'O Reino de Israel de 10 tribos terminou em...', o: ['607 AEC', '740 AEC', '539 AEC'], c: 1 },
+            { q: 'Jeremias foi contemporâneo de... ', o: ['Daniel, Ezequiel e Obadias', 'Miqueias, Isaías e Oseias', 'Joel, Jonas e Amós'], c: 0 },
+            { q: 'Quantas vezes aparece o nome divino nas Escrituras Gregas?', o: ['Mais de 7000 vezes', '237 vezes', 'Não aparece'], c: 1 },
+            { q: 'Em que ano João Batista iniciou o seu ministério?', o: ['30 EC', '29 EC', '31 EC'], c: 1 },
+            { q: 'Que cidades ficavam próximas do Mar da Galileia?', o: ['Cafarnaum, Betsaida e Tiberíades', 'Jerusalém, Betânia e Naim', 'Jericó, Efraim e Betfagé'], c: 0 },
+            { q: 'Jesus entrou em Jerusalém montado num jumento em...', o: ['14 de nisã', 'Data desconhecida', '9 de nisã'], c: 2 },
+            { q: 'Quem foi escolhido como apóstolo no lugar de Judas Iscariotes?', o: ['Paulo', 'Barnabé', 'Matias'], c: 2 },
+            { q: 'A lâmina de ouro no turbante do sumo sacerdote dizia:', o: ['A Santidade pertence a Jeová', 'Ama a Jeová de todo o coração', 'Escuta e obedece'], c: 0 },
+            { q: 'Que árvore representava a garantia de Deus de dar vida eterna?', o: ['Árvore do conhecimento do que é bom e do que é mau', 'Árvore da vida', 'Árvore grande'], c: 1 },
+            { q: 'Nome da região a norte da Grécia que ganhou destaque sob o domínio de Alexandre, o Grande', o: ['Macedónia', 'Ásia Menor', 'Alexandria'], c: 0 },
+            { q: 'O grupo de soldados romanos que servia como guarda pessoal do imperador chamava-se....', o: ['Guarda Pretoriana', 'Guarda Imperial', 'Guarda Romana'], c: 0 },
+            { q: 'Qual era outro nome de Esaú, filho de Isaque?', o: ['Boaz', 'Edom', 'Issacar'], c: 1 },	
+            { q: 'Que dois objetos eram usados pelo sumo sacerdote para determinar a vontade divina?', o: ['Crisólito e Jade', 'Jaquim e Boaz', 'Urim e Tumim'], c: 2 },
+            { q: 'Qual foi a mulher que Jesus defendeu dizendo "Quem não pecou, atire a primeira pedra"?', o: ['Maria Madalena', 'Joana', 'Jesus nunca disse essa frase'], c: 2 },
             { q: 'O que Deus quis dizer com as palavras "Que haja Luz"?(Génesis 1:3)', o: ['A criação da luz no universo', 'A luz difusa tornou-se visível a partir da superfície da terra', 'O nascimento da luz espiritual'], c: 1 },
             { q: 'Porque é que Satanás escolheu o "animal mais cauteloso" para enganar Eva?', o: ['Porque as serpentes são más', 'Porque um animal que normalmente evita os humanos despertaria a curiosidadede de Eva', 'Porque as serpentes são venenosas'], c: 1 },
-			{ q: 'Porque é que Adão e Eva cobriram a nudez depois do pecado?', o: ['Ficaram com sentimentos de culpa perante Deus', 'Ficaram com frio e quiseram agasalhar-se', 'Quiseram desafiar a Deus'], c: 0 },
-			{ q: 'O que Deus quis dizer com a frase "Que haja luzeiros"? (Génesis 1:14)', o: ['O Sol e a Lua seriam criados', 'O Sol e a Lua tornar-se-iam visíveis a partir da superfície da Terra', 'Jesus e os Anjos viriam à existência'], c: 1 },
-			{ q: 'Em que sentido as pessoas começaram a invocar o nome de Deus? (Génesis 4:26)', o: ['Faziam isso com falta de respeito, talvez dando o nome de Jeová a ídolos', 'Passaram a fazer orações a Deus', 'Designaram profetas para representá-los na adoração a Jeová'], c: 0 },
-		    { q: 'A proibição de consumir sangue começou...', o: ['logo após o Dilúvio', 'no início da criação', 'na Lei Mosaica'], c: 0 },
+            { q: 'Porque é que Adão e Eva cobriram a nudez depois do pecado?', o: ['Ficaram com sentimentos de culpa perante Deus', 'Ficaram com frio e quiseram agasalhar-se', 'Quiseram desafiar a Deus'], c: 0 },
+            { q: 'O que Deus quis dizer com a frase "Que haja luzeiros"? (Génesis 1:14)', o: ['O Sol e a Lua seriam criados', 'O Sol e a Lua tornar-se-iam visíveis a partir da superfície da Terra', 'Jesus e os Anjos viriam à existência'], c: 1 },
+            { q: 'Em que sentido as pessoas começaram a invocar o nome de Deus? (Génesis 4:26)', o: ['Faziam isso com falta de respeito, talvez dando o nome de Jeová a ídolos', 'Passaram a fazer orações a Deus', 'Designaram profetas para representá-los na adoração a Jeová'], c: 0 },
+            { q: 'A proibição de consumir sangue começou...', o: ['logo após o Dilúvio', 'no início da criação', 'na Lei Mosaica'], c: 0 },
             { q: 'A quem foi pago o Resgate?', o: ['Satanás', 'Jeová', 'Jesus'], c: 1 }
         ];
 
         let perguntasDoJogo = [];
         let indiceAtual = 0;
+        let errosCometidos = 0;
         let aceitandoRespostas = true;
 
         const gameScreen = document.getElementById('game-screen');
-        const gameoverScreen = document.getElementById('gameover-screen');
-        const victoryScreen = document.getElementById('victory-screen');
+        const resultScreen = document.getElementById('result-screen');
+        const resultTitle = document.getElementById('result-title');
+        const resultMsg = document.getElementById('result-msg');
+        const resultBtn = document.getElementById('result-btn');
+
         const questionText = document.getElementById('question-text');
         const optionButtons = document.querySelectorAll('.option-btn');
         const streakLabel = document.getElementById('streak-label');
+        const errorsLabel = document.getElementById('errors-label');
         const progressFill = document.getElementById('progress-fill');
-        const gameoverMsg = document.getElementById('gameover-msg');
 
         function shuffle(array) {
             for (let i = array.length - 1; i > 0; i--) {
@@ -405,12 +402,14 @@
             const emba = shuffle([...poolDePerguntas]);
             perguntasDoJogo = emba.slice(0, 50);
             indiceAtual = 0;
+            errosCometidos = 0;
             aceitandoRespostas = true;
             updateUI();
         }
 
         function updateUI() {
-            streakLabel.innerText = `Sequência Atual: ${indiceAtual}`;
+            streakLabel.innerText = `Pergunta: ${indiceAtual + 1} / 50`;
+            errorsLabel.innerText = `Erros: ${errosCometidos} / 3`;
             progressFill.style.width = `${(indiceAtual / 50) * 100}%`;
             optionButtons.forEach(btn => { btn.className = 'option-btn'; btn.disabled = false; });
 
@@ -427,31 +426,68 @@
             const p = perguntasDoJogo[indiceAtual];
             optionButtons.forEach(btn => btn.disabled = true);
 
-            if (chosenIndex === p.c) {
+            const acertou = (chosenIndex === p.c);
+
+            if (acertou) {
                 optionButtons[chosenIndex].classList.add('correct');
-                setTimeout(() => {
-                    indiceAtual++;
-                    if (indiceAtual >= 50) { showScreen(victoryScreen); } 
-                    else { aceitandoRespostas = true; updateUI(); }
-                }, 600);
             } else {
                 optionButtons[chosenIndex].classList.add('wrong');
                 optionButtons[p.c].classList.add('correct');
-                setTimeout(() => {
-                    gameoverMsg.innerHTML = `Erraste na pergunta número <strong>${indiceAtual + 1}</strong>!`;
-                    showScreen(gameoverScreen);
-                }, 1000);
+                errosCometidos++;
             }
+
+            setTimeout(() => {
+                // Condição 1: 3 erros atingidos
+                if (errosCometidos >= 3) {
+                    showFinalScreen(
+                        "Fim do Jogo!",
+                        "Falhaste 3 vezes. É bom ler a Bíblia de vez em quando!",
+                        "var(--danger)",
+                        "Voltar a Jogar"
+                    );
+                    return;
+                }
+
+                indiceAtual++;
+
+                // Condição 2: Chegou ao fim das 50 perguntas
+                if (indiceAtual >= 50) {
+                    if (errosCometidos === 0) {
+                        showFinalScreen(
+                            "Parabéns!",
+                            "Parabéns! Conseguiste acertar 50 perguntas seguidas! Vê-se que andas a ler a Bíblia.",
+                            "var(--success)",
+                            "Continuar a Jogar"
+                        );
+                    } else {
+                        showFinalScreen(
+                            "Quiz Concluído",
+                            "Não conseguiste acertar em todas as perguntas. Tens de melhorar esses hábitos de leitura da Bíblia.",
+                            "var(--warning)",
+                            "Voltar a Jogar"
+                        );
+                    }
+                } else {
+                    aceitandoRespostas = true;
+                    updateUI();
+                }
+            }, acertou ? 600 : 1000);
         }
 
-        function showScreen(screen) {
+        function showFinalScreen(title, msg, color, btnText) {
             gameScreen.classList.remove('active');
-            gameoverScreen.classList.remove('active');
-            victoryScreen.classList.remove('active');
-            screen.classList.add('active');
+            resultTitle.innerText = title;
+            resultTitle.style.color = color;
+            resultMsg.innerText = msg;
+            resultBtn.innerText = btnText;
+            resultScreen.classList.add('active');
         }
 
-        function restartGame() { showScreen(gameScreen); initRound(); }
+        function restartGame() {
+            resultScreen.classList.remove('active');
+            gameScreen.classList.add('active');
+            initRound();
+        }
 
         window.onload = initRound;
     </script>
