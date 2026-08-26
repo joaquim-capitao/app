@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Quem disse?</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: system-ui, -apple-system, sans-serif;
+    }
+
+    body {
+      background: #1f1f2e;
+      color: #e4e6eb;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 20px;
+    }
+
+    .card {
+      background: #1f1f2e;
+      padding: 32px;
+      border-radius: 16px;
+      border: 1px solid #33334d;
+      max-width: 520px;
+      width: 100%;
+      text-align: center;
+    }
+
+    .header {
+      margin-bottom: 24px;
+    }
+
+    .title {
+      font-size: 1.6rem;
+      color: #ff6633;
+      margin-bottom: 8px;
+    }
+
+    .score-board {
+      font-size: 0.95rem;
+      color: #b0b3b8;
+      font-weight: 600;
+    }
+
+    .quote-box {
+      background: #191926;
+      border: 1px solid #33334d;
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 24px;
+      min-height: 90px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .quote-text {
+      font-size: 1.15rem;
+      font-style: italic;
+      color: #e4e6eb;
+      line-height: 1.4;
+    }
+
+    .options-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    button.option-btn {
+      background: #191926;
+      border: 1px solid #33334d;
+      border-radius: 10px;
+      padding: 14px;
+      font-size: 1rem;
+      font-weight: 500;
+      color: #7171e0;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    button.option-btn:hover:not(:disabled) {
+      background: #1f1f2e;
+      border-color: #33334d;
+    }
+
+    button.option-btn:disabled {
+      cursor: default;
+    }
+
+    button.option-btn.correct {
+      background: #dcfce7;
+      border-color: #22c55e;
+      color: #15803d;
+      font-weight: 600;
+    }
+
+    button.option-btn.wrong {
+      background: #fee2e2;
+      border-color: #ef4444;
+      color: #b91c1c;
+    }
+
+    .feedback {
+      min-height: 24px;
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 16px;
+    }
+
+    .next-btn {
+      background: #ff6633;
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      font-size: 1rem;
+      font-weight: 600;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .next-btn:hover {
+      background: #e65c2e;
+    }
+
+    .hide {
+      display: none;
+    }
+
+    /* Rodapé */
+    .footer {
+      margin-top: 32px;
+      text-align: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .footer-date {
+      color: #8f9ba8;
+      font-size: 0.95rem;
+    }
+
+    .footer-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: #25283d;
+      color: #5d75d6;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 0.95rem;
+      padding: 10px 20px;
+      border-radius: 8px;
+      border: 1px solid transparent;
+      transition: background 0.2s, border-color 0.2s;
+    }
+
+    .footer-btn:hover {
+      background: #2e324c;
+      border-color: #3b3f5c;
+    }
+
+    .footer-btn svg {
+      width: 18px;
+      height: 18px;
+      fill: currentColor;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="card">
+    <div class="header">
+      <h1 class="title">Quem disse?</h1>
+      <div class="score-board">Pontuação: <span id="score">0</span> / <span id="total">0</span></div>
+    </div>
+
+    <div class="quote-box">
+      <p class="quote-text" id="quote">Carregando...</p>
+    </div>
+
+    <div class="options-grid" id="options"></div>
+
+    <div class="feedback" id="feedback"></div>
+
+    <button id="next-btn" class="next-btn hide" onclick="nextQuestion()">Próxima Frase</button>
+  </div>
+
+  <footer class="footer">
+    <div class="footer-date">Última atualização: 26 de agosto de 2026</div>
+    <a href="https://joaquim-capitao.github.io/app/index" class="footer-btn">
+      <svg viewBox="0 0 24 24">
+        <path d="M4 4h4v4H4V4zm6 0h4v4h-4V4zm6 0h4v4h-4V4zM4 10h4v4H4v-4zm6 0h4v4h-4v-4zm6 0h4v4h-4v-4zM4 16h4v4H4v-4zm6 0h4v4h-4v-4zm6 0h4v4h-4v-4z"/>
+      </svg>
+      Outros jogos e apps
+    </a>
+  </footer>
+
+  <script>
+    const database = [
+      { text: "Vocês são a Luz do mundo", author: "Jesus" },
+      { text: "Estas boas novas serão pregadas em toda a terra", author: "Jesus" },
+      { text: "Vão e façam discípulos", author: "Jesus" },
+      { text: "Há mais felicidade em dar do que em receber", author: "Jesus" },
+      { text: "Continuem a amar os vossos inimigos e a orar pelos que vos perseguem.", author: "Jesus" },
+      { text: "Quanto a mim e aos da minha casa serviremos a Jeová", author: "Josué" },
+      { text: "Tu abres a mão e satisfazes o desejo de todos os seres vivos", author: "David" },
+      { text: "Certifiquem-se das coisas mais importantes.", author: "Paulo" },
+      { text: "Jeová está perto dos que têm o coração quebrantado.", author: "David" },
+      { text: "Por favor, recolhe as minhas lágrimas no teu odre.", author: "David" },
+      { text: "Persistam em examinar se estão na fé", author: "Paulo" },
+      { text: "Jeová é o meu Pastor, nada me faltará", author: "David" },
+      { text: "Felizes os que choram, porque serão consolados", author: "Jesus" },
+      { text: "Felizes os de temperamento brando, porque herdarão a terra", author: "Jesus" },
+      { text: "Felizes os que têm fome e sede de justiça, porque serão saciados.", author: "Jesus" },
+      { text: "Felizes os misericordiosos, porque serão tratados com misericórdia.", author: "Jesus" },
+      { text: "Felizes os puros de coração, porque verão a Deus.", author: "Jesus" },
+      { text: "Felizes os pacificadores, porque serão chamados filhos de Deus.", author: "Jesus" },
+      { text: "Bendito seja Abrão do Deus Altíssimo, Produtor do céu e da terra; E bendito seja o Deus Altíssimo, Que entregou os teus opressores na tua mão!", author: "Melquisedeque" },
+      { text: "Meu filho, o próprio Deus providenciará a ovelha para a oferta queimada", author: "Abraão" },
+      { text: "Também tirarei água para os seus camelos até que fiquem saciados.", author: "Rebeca" },
+      { text: "As mulheres hebreias não são como as mulheres egípcias.", author: "Sifrá e Puá" },
+      { text: "Subamos imediatamente e, com certeza, tomaremos posse dela, pois certamente podemos conquistá-la.", author: "Caleb" },
+      { text: "Sei que Jeová vos dará esta terra e que estamos com medo de vocês.", author: "Raabe" },
+      { text: "Voltem, minhas filhas. Porque é que haviam de ir comigo?", author: "Noemi" },
+      { text: "O seu povo será o meu povo, e o seu Deus será o meu Deus", author: "Rute" },
+      { text: "Se fores comigo, eu irei; mas, se não fores comigo, eu não irei", author: "Baraque" },
+      { text: "Mas, então, és tu rei?", author: "Pilatos" },
+      { text: "É o senhor que está a dizer que eu sou rei.", author: "Jesus" },
+      { text: "quando o espírito santo vier sobre vocês, receberão poder e serão minhas testemunhas", author: "Jesus" },
+      { text: "Nem todo o que me disser: ‘Senhor, Senhor’, entrará no Reino dos céus", author: "Jesus" },
+      { text: "Por meio disto todos saberão que são meus discípulos: se tiverem amor entre vocês", author: "Jesus" },
+      { text: "Já tenho loucos que me cheguem, e vocês ainda me trazem mais um?", author: "Aquis" },
+      { text: "Talvez esteja entretido com os seus pensamentos ou tenha ido fazer as suas necessidades", author: "Elias" },
+      { text: "Estou a ver um ramo de amendoeira.", author: "Jeremias" },
+      { text: "Ai, Soberano Senhor Jeová! Eu não sei falar, pois sou apenas um rapaz.", author: "Jeremias" },
+      { text: "Dê-me aqui numa bandeja a cabeça de João Batista", author: "Filha de Herodias" },
+      { text: "Senhor, queres que mandemos que desça fogo do céu e os destrua?", author: "Tiago e João" },
+      { text: "Porque é que estás tão abatido se não estás doente? Isso só pode ser tristeza de coração", author: "Artaxerxes" },
+      { text: "Vou declarar o teu nome aos meus irmãos e louvar-te no meio da congregação.", author: "David" },
+      { text: "Porque é que estás tão triste? Será que eu não sou para ti melhor do que dez filhos?", author: "Elcana" },
+      { text: "Até quando é que vais ficar embriagada? Para de beber vinho", author: "Eli" },
+      { text: "não bebi vinho nem outra bebida alcoólica, mas derramo a minha alma perante Jeová", author: "Ana" },
+      { text: "Por favor, meu senhor, não dê atenção a este homem imprestável, Nabal, pois ele faz jus ao seu nome. O nome dele é Nabal, e ele é um insensato.", author: "Abigail" },
+      { text: "O meu querido é meu, e eu sou dele.", author: "Jovem sulamita" },
+      { text: "Como é que tu podes dizer que me amas, se não me abres o teu coração?", author: "Dalila" },
+      { text: "Esta campanha militar não te trará glória, pois será nas mãos de uma mulher que Jeová entregará Sísera.", author: "Débora" },
+      { text: "Eu e o meu povo fomos vendidos para sermos exterminados, mortos e destruídos.", author: "Ester" },
+      { text: "Não são o Abana e o Farpar, os rios de Damasco, melhores do que todas as águas de Israel? Não me posso lavar neles e ficar puro?", author: "Naamã" },
+      { text: "Meu pai, se o profeta lhe tivesse dito para fazer algo muito difícil, não o faria?", author: "Servos de Naamã" },
+      { text: "Deixem simplesmente que a vossa palavra ‘sim’ signifique sim, e o vosso ‘não’", author: "Jesus" },
+      { text: "Porque é que nos enganaram, dizendo: ‘Somos de um lugar muito distante’, quando na verdade moram mesmo no nosso meio?", author: "Josué" },
+      { text: "Sol, fica parado sobre Gibeão", author: "Josué" },
+      { text: "Perdão, Jeová, mas nunca tive facilidade em falar, nem no passado nem depois de falares com o teu servo, pois sou vagaroso na fala e vagaroso de língua.", author: "Moisés" },
+      { text: "Deves selecionar dentre o povo homens capazes... e designá-los sobre eles como chefes de mil, chefes de cem, chefes de cinquenta e chefes de dez", author: "Jetro" },
+      { text: "Quem é que pode encontrar uma esposa capaz? O seu valor é muito maior do que o de corais", author: "Mãe de Lemuel" },
+      { text: "Qual deles é que vocês querem que eu solte: Barrabás ou Jesus, o chamado Cristo?", author: "Pilatos" },
+      { text: "Lancem a rede do lado direito do barco e encontrarão alguma coisa", author: "Jesus" },
+      { text: "Senhor, tu sabes todas as coisas. Sabes que eu te amo", author: "Pedro" },
+      { text: "Senhor, e o que acontecerá a este homem?", author: "Pedro" },
+      { text: "Se eu quiser que ele permaneça até eu vir, o que é que isso te importa? Continua tu a seguir-me.", author: "Jesus" },
+      { text: "Se eu não vir nas suas mãos a marca dos pregos, não puser o dedo na marca dos pregos e não puser a mão no seu lado, de modo algum acreditarei.", author: "Tomé" },
+      { text: "Será que o Todo-Poderoso se importa que sejas justo ou será que ele ganha alguma coisa por seres íntegro?", author: "Elifaz" },
+      { text: "Como pode o homem mortal ser justo perante Deus, ou como pode alguém que nasceu de uma mulher ser inocente?", author: "Bildade" },
+      { text: "Eu sou jovem, e vocês são idosos. Por isso, respeitosamente, eu contive-me e não me atrevi a dizer-vos o que sei.", author: "Eliú" },
+      { text: "Que haja luz.", author: "Jeová Deus" },
+      { text: "Sou eu o guardião do meu irmão?", author: "Caim" },
+      { text: "Aqui estão o fogo e a lenha, mas onde está a ovelha para a oferta queimada?", author: "Isaque" },
+      { text: "Embora quisessem fazer-me mal,+ Deus quis que as coisas acabassem bem e que muitas vidas fossem preservadas; e é o que está a fazer hoje.", author: "José" },
+      { text: "Eu Vou Tornar-Me O Que Eu Me Decidir Tornar.", author: "Jeová Deus" },
+      { text: "Deixa o meu povo partir, para que celebrem uma festividade para mim no deserto.", author: "Moisés" },
+      { text: "O próprio Jeová lutará por vocês,+ e vocês ficarão em silêncio.", author: "Moisés" },
+      { text: "Quem está do lado de Jeová? Que venha até mim!", author: "Moisés" },
+      { text: "Não te ordenei que fosses corajoso e forte? Não fiques apavorado nem tenhas medo, pois Jeová, teu Deus, estará contigo por onde quer que vás.", author: "Jeová Deus" },
+      { text: "Quanto a mim e aos da minha casa, serviremos a Jeová.", author: "Josué" },
+      { text: "Podes falar, pois o teu servo está a ouvir.", author: "Samuel" },
+      { text: "O homem vê a aparência, mas Jeová vê o coração.", author: "Jeová Deus" },
+      { text: "Vens contra mim com espada, lança e dardo, mas eu vou contra ti em nome de Jeová dos exércitos, o Deus dos exércitos de Israel, a quem desafiaste.", author: "David" },
+      { text: "Jeová é o meu Pastor. Nada me faltará.", author: "David" },
+      { text: "Jeová é a minha luz e a minha salvação. De quem é que eu terei medo", author: "David" },
+      { text: "Cria em mim um coração puro, ó Deus, e põe dentro de mim um espírito novo, firme.", author: "David" },
+      { text: "O temor de Jeová é o início da sabedoria.", author: "Salomão" },
+      { text: "A maior das vaidades! Tudo é vão!", author: "Salomão" },
+      { text: "Há um tempo determinado para tudo, um tempo para cada atividade debaixo dos céus.", author: "Salomão" },
+      { text: "Aqui estou! Envia-me!", author: "Isaías" },
+      { text: "Jeová deu e Jeová tirou. Que o nome de Jeová continue a ser louvado.", author: "Jó" },
+      { text: "Pois bem sei que o meu redentor está vivo; ele virá depois e levantar-se-á sobre a terra", author: "Jó" },
+      { text: "Ouvi falar a teu respeito, Mas, agora, vejo-te com os meus próprios olhos.", author: "Jó" },
+      { text: "Se eu tiver de morrer, morrerei.", author: "Ester" },
+      { text: "Mas o justo viverá pela sua fidelidade.", author: "Jeová" },
+      { text: "Aconteça comigo segundo a tua declaração.", author: "Maria" },
+      { text: "Arrependam-se, pois o Reino dos céus está próximo.", author: "João Batista" },
+      { text: "Vejam o Cordeiro de Deus, que tira o pecado do mundo!", author: "João Batista" },
+      { text: "Ele tem de continuar a aumentar, mas eu tenho de continuar a diminuir.", author: "João Batista" },
+      { text: "Felizes os que têm consciência da sua necessidade espiritual, porque a eles pertence o Reino dos céus.", author: "Jesus" },
+      { text: "Vocês são a luz do mundo. Não se pode esconder uma cidade situada sobre um monte.", author: "Jesus" },
+      { text: "Venham a mim, todos vocês que estão a trabalhar arduamente e que estão sobrecarregados, e eu vou reanimar-vos", author: "Jesus" },
+      { text: "Tu és o Cristo, o Filho do Deus vivente.", author: "Pedro" },
+      { text: "Senhor, para quem iremos? Tu tens declarações de vida eterna", author: "Pedro" },
+      { text: "Eu sou o caminho, a verdade e a vida. Ninguém vem ao Pai senão por mim.", author: "Jesus" },
+      { text: "Pai, se tu quiseres, afasta de mim este cálice. Contudo, ocorra não a minha vontade, mas a tua.", author: "Jesus" },
+      { text: "Pai, perdoa-lhes, pois não sabem o que fazem.", author: "Jesus" },
+      { text: "Está consumado!", author: "Jesus" },
+      { text: "Ele não está aqui, pois foi levantado, assim como ele tinha dito.", author: "Anjo" },
+      { text: "Meu Senhor e meu Deus!", author: "Tomé" },
+      { text: "Não possuo prata nem ouro, mas o que tenho é o que te dou. Em nome de Jesus Cristo, o Nazareno, anda!", author: "Pedro" },
+      { text: "Temos de obedecer a Deus como governante antes do que a homens.", author: "Pedro" },
+      { text: "Jeová, não os condenes por este pecado.", author: "Estêvão" },
+      { text: "Quem vive já não sou eu, mas é Cristo que vive em união comigo.", author: "Paulo" },
+      { text: "Travei a boa luta,+ terminei a corrida,+ vivi de acordo com a fé.", author: "Paulo" },
+      { text: "Ouçam a minha voz, esposas de Lameque; Deem ouvidos à minha declaração: Matei um homem porque ele me feriu.", author: "Lameque" },
+      { text: "Sou um estrangeiro e colono no vosso meio. Deem-me uma propriedade no vosso meio para servir de sepultura, para que eu enterre a minha esposa.", author: "Abraão" },
+      { text: "Não é ele o teu Pai, que te trouxe à existência, aquele que te fez e que te estabeleceu firmemente?", author: "Moisés" },
+      { text: "Por favor, dê-me uma bênção, pois o senhor deu-me um pedaço de terra no sul;* dê-me também Gulote-Maim.", author: "Acsa, filha de Caleb" },
+      { text: "Setenta reis, cujos polegares das mãos e dedos grandes dos pés lhes foram amputados, apanham comida debaixo da minha mesa. Assim como fiz, assim me retribuiu Deus.", author: "Adoni-Bezeque" },
+      { text: "Venha, meu senhor, entre aqui. Não tenha medo.", author: "Jael" },
+      { text: "Se eu tiver mesmo o teu favor, dá-me um sinal de que és tu que falas comigo.", author: "Gideão" },
+      { text: "Se eu for amarrado com sete cordas de arco novas, que ainda não tenham secado, ficarei fraco e serei como qualquer outro homem.", author: "Sansão" },
+      { text: "Chamem-me Mara, pois o Todo-Poderoso tornou a minha vida muito amarga.", author: "Noemi" },
+      { text: "Quem é o seu servo para que o senhor mostre consideração por um cão morto como eu?", author: "Mefibosete" },
+      { text: "Porque é que pensou em fazer a mesma coisa contra o povo de Deus?", author: "A mulher astuta de Tecoa" },
+      { text: "Que o meu senhor, o rei David, viva para sempre!", author: "Bate-Seba" },
+      { text: "Tão certo como vive Jeová, seu Deus, não tenho pão, só tenho um punhado de farinha num jarro grande e um pouco de azeite num jarro pequeno", author: "A viúva de Sarefá" },
+      { text: "Se apenas o meu senhor visitasse o profeta que está em Samaria! Ele iria curá-lo da sua lepra.", author: "A menina israelita" },
+      { text: "Ai, meu senhor, era emprestado!", author: "Um dos profetas" },
+      { text: "Se ficarmos calados e esperarmos até ao amanhecer, mereceremos ser punidos. Vamos agora mesmo informar a casa do rei.", author: "Quatro leprosos à entrada de Samaria" },
+      { text: "Como pode haver paz enquanto continuam a prostituição e as muitas feitiçarias de Jezabel, tua mãe?", author: "Jeú" },
+      { text: "Conspiração! Conspiração!", author: "Atalia" },
+      { text: "Ó Jeová, Deus de Israel, tu és justo, porque sobrevivemos como resto até ao dia de hoje.", author: "Esdras" },
+      { text: "Um homem como eu deveria fugir? Será que um homem como eu pode entrar no templo e continuar vivo? Não vou entrar!", author: "Neemias" },
+      { text: "Se parecer bem ao rei, que seja escrito um decreto para os destruir, e eu pesarei 10.000 talentos de prata.", author: "Hamã" },
+      { text: "Não são apenas os homens idosos que são sábios, nem apenas os homens velhos que compreendem o que é correto.", author: "Eliú" },
+      { text: "Ainda te apegas firmemente à tua integridade? Amaldiçoa a Deus e morre!", author: "Esposa de Jó" },
+      { text: "Jeová põe o seu trono no templo sagrado. O trono de Jeová está nos céus.", author: "David" },
+      { text: "Não me dês nem pobreza nem riquezas. Apenas deixa-me comer a minha porção de alimento.", author: "Agur" },
+      { text: "Que o teu coração não te leve aos caminhos dela; não te desvies para as suas veredas.", author: "Mãe do rei Lemuel" },
+      { text: "Eu era apenas um pastor e um tratador de sicómoros. Mas Jeová tirou-me de detrás do rebanho e disse-me: 'Vai, profetiza ao meu povo Israel.'", author: "Amós" },
+      { text: "Não sou profeta, nem sou filho de profeta.", author: "Amós" },
+      { text: "Senhor Jeová, perdoa, por favor! Como poderá Jacó sobreviver? Ele é tão pequeno!", author: "Amós" },
+      { text: "Até quando, ó Jeová, terei de clamar por ajuda sem que tu ouças?", author: "Habacuque" },
+      { text: "Senhor, não sou digno de o receber debaixo do meu teto, mas diga apenas a palavra e o meu servo será curado.", author: "O oficial do exército" },
+      { text: "Se eu apenas tocar na sua roupa, ficarei curada.", author: "A mulher com fluxo de sangue" },
+      { text: "Sim, Senhor, mas até os cãezinhos comem debaixo da mesa as migalhas das crianças.", author: "A mulher fenícia" },
+      { text: "Mestre, vimos alguém expulsar demónios em teu nome e tentámos impedi-lo, porque ele não nos seguia.", author: "João" },
+      { text: "Filho de David, Jesus, tem misericórdia de mim!", author: "Bartimeu" },
+      { text: "Como posso ter a certeza disto? Eu sou velho, e a minha esposa já é de idade avançada.", author: "Zacarias" },
+      { text: "Agora, Soberano Senhor, estás a deixar o teu escravo partir em paz, segundo a tua declaração.", author: "Simeão" },
+      { text: "O que quer que eu tenha roubado a alguém, vou restituir quatro vezes mais", author: "Zaqueu" },
+      { text: "Nós estamos a receber exatamente o que merecemos pelas coisas que fizemos; mas este homem não fez nada de mau.", author: "O criminoso na estaca" },
+      { text: "Jesus, lembra-te de mim quando entrares no teu Reino.", author: "O criminoso na estaca" },
+      { text: "Como pode um homem nascer de novo quando já é velho? Acaso pode entrar no ventre da sua mãe pela segunda vez e nascer?", author: "Nicodemos" },
+      { text: "Será que a nossa Lei julga um homem sem primeiro ouvi-lo e saber o que ele está a fazer?", author: "Nicodemos" },
+      { text: "Pode sair algo de bom de Nazaré?", author: "Natanael" },
+      { text: "Senhor, a esta altura ele já deve cheirar mal, pois já faz quatro dias.", author: "Marta" },
+      { text: "Vós não sabeis nada, nem pensais que é para vosso benefício que um só homem morra a favor do povo, e não que toda a nação seja destruída.", author: "Caifás" },
+      { text: "Se este homem não fosse de Deus, nada poderia fazer.", author: "O ex-cego de nascença" },
+      { text: "Diz-me, por favor, de quem fala o profeta? De si mesmo ou de outro homem?", author: "O eunuco etíope" },
+      { text: "Não vos metais com estes homens; deixai-os em paz. Porque, se este plano ou esta obra for de homens, será derrubada; mas, se for de Deus, vós não podereis derrubá-los.", author: "Gamaliel" },
+      { text: "Em pouco tempo convencer-me-ias a tornar-me cristão.", author: "Rei Herodes Agripa II" },
+      { text: "Não fará o Juiz de toda a terra o que é justo?", author: "Abraão" }
+    ];
+
+    const allAuthors = [...new Set(database.map(item => item.author))];
+
+    let currentQuestion = 0;
+    let score = 0;
+    let mistakes = 0;
+    let shuffledDeck = [];
+
+    function shuffle(array) {
+      return array.slice().sort(() => Math.random() - 0.5);
+    }
+
+    function initGame(continuePlaying = false) {
+      if (!continuePlaying) {
+        shuffledDeck = shuffle(database);
+        currentQuestion = 0;
+        score = 0;
+        mistakes = 0;
+      }
+      loadQuestion();
+    }
+
+    function generateOptions(correctAuthor) {
+      const distractors = shuffle(allAuthors.filter(name => name !== correctAuthor)).slice(0, 2);
+      return shuffle([correctAuthor, ...distractors]);
+    }
+
+    function loadQuestion() {
+      const q = shuffledDeck[currentQuestion];
+      document.getElementById("quote").innerText = `"${q.text}"`;
+      document.getElementById("feedback").innerText = "";
+      
+      const nextBtn = document.getElementById("next-btn");
+      nextBtn.classList.add("hide");
+      nextBtn.innerText = "Próxima Frase";
+      nextBtn.onclick = nextQuestion;
+
+      document.getElementById("score").innerText = score;
+      document.getElementById("total").innerText = currentQuestion;
+
+      const options = generateOptions(q.author);
+      const container = document.getElementById("options");
+      container.innerHTML = "";
+
+      options.forEach(authorName => {
+        const btn = document.createElement("button");
+        btn.className = "option-btn";
+        btn.innerText = authorName;
+        btn.onclick = () => selectOption(btn, authorName, q.author);
+        container.appendChild(btn);
+      });
+    }
+
+    function selectOption(selectedBtn, chosenAuthor, correctAuthor) {
+      const buttons = document.querySelectorAll(".option-btn");
+      buttons.forEach(btn => {
+        btn.disabled = true;
+        if (btn.innerText === correctAuthor) {
+          btn.classList.add("correct");
+        }
+      });
+
+      const feedback = document.getElementById("feedback");
+      if (chosenAuthor === correctAuthor) {
+        score++;
+        feedback.style.color = "#15803d";
+        feedback.innerText = "Correto!";
+      } else {
+        mistakes++;
+        selectedBtn.classList.add("wrong");
+        feedback.style.color = "#b91c1c";
+        feedback.innerText = `Incorreto. A resposta certa era ${correctAuthor}.`;
+      }
+
+      document.getElementById("score").innerText = score;
+      document.getElementById("total").innerText = currentQuestion + 1;
+
+      // Se falhar 3 vezes, termina imediatamente
+      if (mistakes >= 3) {
+        endGame("Falhaste 3 vezes. É bom ler a Bíblia de vez em quando!", "Voltar a Jogar", () => initGame(false));
+        return;
+      }
+
+      // Se chegar às 50 perguntas
+      if (currentQuestion + 1 === 50) {
+        if (mistakes === 0) {
+          endGame("Parabéns! Conseguiste acertar 50 perguntas seguidas! Vê-se que andas a ler a Bíblia.", "Continuar a Jogar", () => {
+            currentQuestion++;
+            loadQuestion();
+          });
+        } else {
+          endGame("Não conseguiste acertar em todas as perguntas. Tens de melhorar esses hábitos de leitura da Bíblia.", "Voltar a Jogar", () => initGame(false));
+        }
+        return;
+      }
+
+      document.getElementById("next-btn").classList.remove("hide");
+    }
+
+    function endGame(message, buttonText, buttonAction) {
+      document.getElementById("quote").innerText = message;
+      document.getElementById("options").innerHTML = "";
+      document.getElementById("feedback").innerText = "";
+      
+      const nextBtn = document.getElementById("next-btn");
+      nextBtn.innerText = buttonText;
+      nextBtn.onclick = buttonAction;
+      nextBtn.classList.remove("hide");
+    }
+
+    function nextQuestion() {
+      currentQuestion++;
+      if (currentQuestion < shuffledDeck.length) {
+        loadQuestion();
+      } else {
+        endGame(`Fim de jogo! Acertaste ${score} de ${shuffledDeck.length} frases.`, "Voltar a Jogar", () => initGame(false));
+      }
+    }
+
+    initGame();
+  </script>
+</body>
+</html>
