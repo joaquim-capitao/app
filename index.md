@@ -1,5 +1,6 @@
 # Apps e Jogos
-(Aqui estão alguns jogos didáticos para quem gosta da Bíblia. Se descobrires algum bug 🪲, agradeço o teu feedback.)
+
+<br>
 
 ### Jogos:
 
@@ -19,6 +20,6 @@
 
 [Puzzle: Testemunho Público (Puzzle)](https://joaquim-capitao.github.io/app/puzzle_003.html)
 
-### Úteis
+### Úteis:
 
 [Crónómetro para Reunião](https://joaquim-capitao.github.io/app/cronometro-rvmc.html)
