@@ -19,3 +19,6 @@
 
 [Puzzle: Testemunho Público (Puzzle)](https://joaquim-capitao.github.io/app/puzzle_003.html)
 
+### Úteis
+
+[Crónómetro para Reunião](https://joaquim-capitao.github.io/app/cronometro-rvmc.html)
