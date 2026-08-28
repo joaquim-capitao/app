@@ -22,4 +22,4 @@
 
 ### Úteis:
 
-[Crónómetro para Reunião](https://joaquim-capitao.github.io/app/cronometro-rvmc.html)
+[Cronómetro para Reunião](https://joaquim-capitao.github.io/app/cronometro-rvmc.html)
