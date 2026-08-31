@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Registo de Horas Mensal</title>
+  <style>
+    :root {
+      --bg: #151620;
+      --card-bg: #1d1e2c;
+      --surface: #242638;
+      --surface-hover: #2b2e44;
+      --text-main: #f1f5f9;
+      --text-muted: #8e95ab;
+      --border: #2d3047;
+      --primary: #f97316;
+      --primary-hover: #ea580c;
+      --input-bg: #151620;
+      --input-focus: #1c1f33;
+      --accent-orange: #f97316;
+      --accent-blue: #6366f1;
+      --accent-m: #38bdf8;
+      --accent-t: #fbbf24;
+      --accent-n: #a855f7;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+    }
+
+    body {
+      background-color: var(--bg);
+      color: var(--text-main);
+      display: flex;
+      justify-content: center;
+      padding: 24px 16px 110px;
+      min-height: 100vh;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 960px;
+      background: var(--card-bg);
+      padding: 24px;
+      border-radius: 16px;
+      box-shadow: 0 10px 30px -5px rgba(0, 0, 0, 0.5);
+      border: 1px solid var(--border);
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .header-controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .nav-btn {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 8px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      color: var(--text-main);
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 0.9rem;
+    }
+
+    .nav-btn:hover {
+      background: var(--surface-hover);
+      border-color: #434768;
+    }
+
+    #monthYearTitle {
+      font-size: 1.4rem;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--primary);
+    }
+
+    .legend {
+      display: flex;
+      gap: 16px;
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .legend-tag {
+      font-weight: 700;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+    }
+    .tag-m { background: rgba(56, 189, 248, 0.15); color: #38bdf8; border: 1px solid rgba(56, 189, 248, 0.3); }
+    .tag-t { background: rgba(251, 191, 36, 0.15); color: #fbbf24; border: 1px solid rgba(251, 191, 36, 0.3); }
+    .tag-n { background: rgba(168, 85, 247, 0.15); color: #a855f7; border: 1px solid rgba(168, 85, 247, 0.3); }
+
+    /* Cartão do Total de Horas Feitas */
+    .summary-card {
+      background: linear-gradient(135deg, rgba(249, 115, 22, 0.1) 0%, rgba(99, 102, 241, 0.08) 100%);
+      border: 1px solid rgba(249, 115, 22, 0.25);
+      border-radius: 12px;
+      padding: 16px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .summary-info {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .summary-label {
+      font-size: 0.85rem;
+      font-weight: 700;
+      color: var(--primary);
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+    }
+
+    .summary-subtitle {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+    }
+
+    .summary-value-box {
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+    }
+
+    .summary-value {
+      font-size: 1.9rem;
+      font-weight: 800;
+      color: #fff;
+    }
+
+    .summary-unit {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--primary);
+    }
+
+    .weekdays-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      text-align: center;
+      font-weight: 600;
+      color: var(--text-muted);
+      font-size: 0.85rem;
+      margin-bottom: 10px;
+    }
+
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 8px;
+    }
+
+    .day-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 8px;
+      min-height: 115px;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: all 0.2s;
+    }
+
+    .day-card:hover {
+      border-color: #4b5075;
+      background: var(--surface-hover);
+    }
+
+    .day-card.empty {
+      background: transparent;
+      border: 1px dashed rgba(45, 48, 71, 0.5);
+      opacity: 0.3;
+    }
+
+    .day-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+    }
+
+    .day-number {
+      font-weight: 700;
+      font-size: 0.9rem;
+      color: var(--text-main);
+    }
+
+    .day-total {
+      font-size: 0.75rem;
+      color: var(--primary);
+      font-weight: 700;
+    }
+
+    .periods-container {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+
+    .period-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.75rem;
+    }
+
+    .period-row span {
+      width: 16px;
+      font-weight: 700;
+      border-radius: 3px;
+      text-align: center;
+      font-size: 0.7rem;
+    }
+
+    .period-m { color: var(--accent-m); }
+    .period-t { color: var(--accent-t); }
+    .period-n { color: var(--accent-n); }
+
+    .period-input {
+      width: 48px;
+      padding: 3px 6px;
+      border: 1px solid var(--border);
+      background: var(--input-bg);
+      border-radius: 6px;
+      text-align: right;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--text-main);
+      outline: none;
+      transition: all 0.15s;
+    }
+
+    .period-input:focus {
+      border-color: var(--primary);
+      background-color: var(--input-focus);
+      box-shadow: 0 0 0 2px rgba(249, 115, 22, 0.25);
+    }
+
+    /* Secção de Rodapé do Cartão Principal */
+    .app-meta-footer {
+      margin-top: 36px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      padding-top: 20px;
+      border-top: 1px solid rgba(45, 48, 71, 0.6);
+    }
+
+    .last-update-text {
+      font-size: 0.95rem;
+      color: #94a3b8;
+      text-align: center;
+    }
+
+    .apps-link-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      background: #202234;
+      color: #6366f1;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 0.95rem;
+      padding: 10px 22px;
+      border-radius: 12px;
+      border: 1px solid rgba(99, 102, 241, 0.2);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+      transition: all 0.2s ease;
+    }
+
+    .apps-link-btn:hover {
+      background: #282a40;
+      border-color: rgba(99, 102, 241, 0.45);
+      color: #818cf8;
+      transform: translateY(-1px);
+    }
+
+    .apps-link-btn svg {
+      width: 18px;
+      height: 18px;
+      fill: currentColor;
+    }
+
+    /* Rodapé fixo */
+    .total-footer {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(18, 19, 28, 0.95);
+      backdrop-filter: blur(10px);
+      border-top: 1px solid var(--border);
+      color: #ffffff;
+      padding: 14px 20px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 100;
+    }
+
+    .total-box {
+      width: 100%;
+      max-width: 960px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .totals-breakdown {
+      display: flex;
+      gap: 16px;
+      font-size: 0.85rem;
+      color: var(--text-muted);
+    }
+
+    .totals-breakdown span b {
+      color: #fff;
+    }
+
+    .total-main {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .total-main span {
+      font-size: 0.95rem;
+      font-weight: 500;
+      color: var(--text-muted);
+    }
+
+    .total-badge {
+      background: var(--primary);
+      color: #fff;
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-size: 1.15rem;
+      font-weight: 700;
+      letter-spacing: 0.3px;
+      box-shadow: 0 2px 10px rgba(249, 115, 22, 0.3);
+    }
+
+    @media (max-width: 700px) {
+      body {
+        padding: 12px 8px 120px;
+      }
+      .container {
+        padding: 14px;
+      }
+      .day-card {
+        min-height: 95px;
+        padding: 4px;
+      }
+      .period-input {
+        width: 36px;
+        padding: 2px 3px;
+        font-size: 0.72rem;
+      }
+      .totals-breakdown {
+        display: none;
+      }
+      .total-box {
+        justify-content: space-between;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <header>
+      <div class="header-controls">
+        <button class="nav-btn" id="prevMonth">&#8592; Anterior</button>
+        <button class="nav-btn" id="todayBtn">Hoje</button>
+        <button class="nav-btn" id="nextMonth">Seguinte &#8594;</button>
+      </div>
+
+      <span id="monthYearTitle"></span>
+
+      <div class="legend">
+        <div class="legend-item"><span class="legend-tag tag-m">M</span> Manhã</div>
+        <div class="legend-item"><span class="legend-tag tag-t">T</span> Tarde</div>
+        <div class="legend-item"><span class="legend-tag tag-n">N</span> Noite</div>
+      </div>
+    </header>
+
+    <!-- Total de Horas Feitas -->
+    <div class="summary-card">
+      <div class="summary-info">
+        <span class="summary-label">Total de Horas Feitas</span>
+        <span class="summary-subtitle" id="summaryMonthLabel">Acumulado do mês selecionado</span>
+      </div>
+      <div class="summary-value-box">
+        <span class="summary-value" id="cardTotalHours">0.0</span>
+        <span class="summary-unit">horas</span>
+      </div>
+    </div>
+
+    <div class="weekdays-grid">
+      <div>Dom</div>
+      <div>Seg</div>
+      <div>Ter</div>
+      <div>Qua</div>
+      <div>Qui</div>
+      <div>Sex</div>
+      <div>Sáb</div>
+    </div>
+
+    <div class="calendar-grid" id="calendarGrid"></div>
+
+    <!-- Secção com a Data de Atualização e Link -->
+    <div class="app-meta-footer">
+      <div class="last-update-text">Última atualização: 26 de agosto de 2026</div>
+      <a href="https://joaquim-capitao.github.io/app/index" target="_blank" rel="noopener noreferrer" class="apps-link-btn">
+        <svg viewBox="0 0 24 24">
+          <path d="M4 4h4v4H4V4zm6 0h4v4h-4V4zm6 0h4v4h-4V4zM4 10h4v4H4v-4zm6 0h4v4h-4v-4zm6 0h4v4h-4v-4zM4 16h4v4H4v-4zm6 0h4v4h-4v-4zm6 0h4v4h-4v-4z"/>
+        </svg>
+        Outros jogos e apps
+      </a>
+    </div>
+  </div>
+
+  <!-- Rodapé fixo -->
+  <footer class="total-footer">
+    <div class="total-box">
+      <div class="totals-breakdown">
+        <span>Mês atual:</span>
+        <span>Manhã: <b id="subtotalM">0h</b></span>
+        <span>Tarde: <b id="subtotalT">0h</b></span>
+        <span>Noite: <b id="subtotalN">0h</b></span>
+      </div>
+      <div class="total-main">
+        <span>Total do Mês:</span>
+        <span class="total-badge" id="totalMonthDisplay">0.0 h</span>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    const STORAGE_KEY = 'registo_horas_mensal_data';
+
+    let timeEntries = {};
+    try {
+      const saved = localStorage.getItem(STORAGE_KEY);
+      if (saved) {
+        timeEntries = JSON.parse(saved);
+      }
+    } catch (err) {
+      console.error('Erro ao ler localStorage', err);
+      timeEntries = {};
+    }
+
+    let currentDate = new Date();
+
+    const monthYearTitle = document.getElementById('monthYearTitle');
+    const calendarGrid = document.getElementById('calendarGrid');
+    const totalMonthDisplay = document.getElementById('totalMonthDisplay');
+    const cardTotalHours = document.getElementById('cardTotalHours');
+    const summaryMonthLabel = document.getElementById('summaryMonthLabel');
+    const subtotalM = document.getElementById('subtotalM');
+    const subtotalT = document.getElementById('subtotalT');
+    const subtotalN = document.getElementById('subtotalN');
+
+    const prevBtn = document.getElementById('prevMonth');
+    const nextBtn = document.getElementById('nextMonth');
+    const todayBtn = document.getElementById('todayBtn');
+
+    function renderCalendar() {
+      calendarGrid.innerHTML = '';
+
+      const year = currentDate.getFullYear();
+      const month = currentDate.getMonth();
+
+      const monthName = new Intl.DateTimeFormat('pt-PT', { month: 'long', year: 'numeric' }).format(currentDate);
+      monthYearTitle.textContent = monthName;
+      if (summaryMonthLabel) {
+        summaryMonthLabel.textContent = `Mês de ${monthName}`;
+      }
+
+      const firstDayIndex = new Date(year, month, 1).getDay();
+      const totalDays = new Date(year, month + 1, 0).getDate();
+
+      for (let i = 0; i < firstDayIndex; i++) {
+        const emptyCell = document.createElement('div');
+        emptyCell.className = 'day-card empty';
+        calendarGrid.appendChild(emptyCell);
+      }
+
+      for (let day = 1; day <= totalDays; day++) {
+        const dateKey = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+        
+        if (!timeEntries[dateKey]) {
+          timeEntries[dateKey] = { m: '', t: '', n: '' };
+        }
+
+        const entry = timeEntries[dateKey];
+        const daySum = (Number(entry.m) || 0) + (Number(entry.t) || 0) + (Number(entry.n) || 0);
+
+        const dayCard = document.createElement('div');
+        dayCard.className = 'day-card';
+        dayCard.id = `card-${dateKey}`;
+
+        dayCard.innerHTML = `
+          <div class="day-header">
+            <span class="day-number">${day}</span>
+            <span class="day-total" id="day-sum-${dateKey}">${daySum > 0 ? daySum + 'h' : ''}</span>
+          </div>
+          <div class="periods-container">
+            <div class="period-row">
+              <span class="period-m">M</span>
+              <input type="number" step="0.5" min="0" max="24" class="period-input" 
+                     data-date="${dateKey}" data-period="m" value="${entry.m}">
+            </div>
+            <div class="period-row">
+              <span class="period-t">T</span>
+              <input type="number" step="0.5" min="0" max="24" class="period-input" 
+                     data-date="${dateKey}" data-period="t" value="${entry.t}">
+            </div>
+            <div class="period-row">
+              <span class="period-n">N</span>
+              <input type="number" step="0.5" min="0" max="24" class="period-input" 
+                     data-date="${dateKey}" data-period="n" value="${entry.n}">
+            </div>
+          </div>
+        `;
+
+        calendarGrid.appendChild(dayCard);
+      }
+
+      calendarGrid.querySelectorAll('.period-input').forEach(input => {
+        input.addEventListener('input', handleInputChange);
+      });
+
+      calculateTotals();
+    }
+
+    function handleInputChange(e) {
+      const { date, period } = e.target.dataset;
+      const val = parseFloat(e.target.value);
+      
+      timeEntries[date][period] = isNaN(val) ? '' : val;
+
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(timeEntries));
+
+      const entry = timeEntries[date];
+      const daySum = (Number(entry.m) || 0) + (Number(entry.t) || 0) + (Number(entry.n) || 0);
+      const daySumEl = document.getElementById(`day-sum-${date}`);
+      if (daySumEl) {
+        daySumEl.textContent = daySum > 0 ? `${daySum}h` : '';
+      }
+
+      calculateTotals();
+    }
+
+    function calculateTotals() {
+      const year = currentDate.getFullYear();
+      const month = String(currentDate.getMonth() + 1).padStart(2, '0');
+      const prefix = `${year}-${month}`;
+
+      let totM = 0;
+      let totT = 0;
+      let totN = 0;
+
+      for (const date in timeEntries) {
+        if (date.startsWith(prefix)) {
+          const entry = timeEntries[date];
+          totM += Number(entry.m) || 0;
+          totT += Number(entry.t) || 0;
+          totN += Number(entry.n) || 0;
+        }
+      }
+
+      const totalMonth = totM + totT + totN;
+
+      subtotalM.textContent = `${totM.toFixed(1)}h`;
+      subtotalT.textContent = `${totT.toFixed(1)}h`;
+      subtotalN.textContent = `${totN.toFixed(1)}h`;
+      totalMonthDisplay.textContent = `${totalMonth.toFixed(1)} h`;
+      
+      if (cardTotalHours) {
+        cardTotalHours.textContent = totalMonth.toFixed(1);
+      }
+    }
+
+    prevBtn.addEventListener('click', () => {
+      currentDate.setMonth(currentDate.getMonth() - 1);
+      renderCalendar();
+    });
+
+    nextBtn.addEventListener('click', () => {
+      currentDate.setMonth(currentDate.getMonth() + 1);
+      renderCalendar();
+    });
+
+    todayBtn.addEventListener('click', () => {
+      currentDate = new Date();
+      renderCalendar();
+    });
+
+    renderCalendar();
+  </script>
+</body>
+</html>
