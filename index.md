@@ -23,3 +23,6 @@
 ### Úteis:
 
 [Cronómetro para Reunião](https://joaquim-capitao.github.io/app/cronometro-rvmc.html)
+
+[Registo de Horas para Pioneiros](https://joaquim-capitao.github.io/app/registo-de-horas-para-pioneiros.html)
+
