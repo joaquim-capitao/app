@@ -12,6 +12,8 @@
 
 [Arca de Noé - Salva os animais](https://joaquim-capitao.github.io/app/salve-animais.html)
 
+---
+
 ### Puzzles:
 
 [Puzzle: Noé no Paraíso](https://joaquim-capitao.github.io/app/puzzle_001.html)
@@ -20,6 +22,8 @@
 
 [Puzzle: Testemunho Público (Puzzle)](https://joaquim-capitao.github.io/app/puzzle_003.html)
 
+
+---
 ### Úteis:
 
 [Cronómetro para Reunião](https://joaquim-capitao.github.io/app/cronometro-rvmc.html)
